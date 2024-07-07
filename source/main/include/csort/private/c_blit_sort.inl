@@ -9,16 +9,16 @@ namespace ncore
 {
     namespace blit_sort
     {
-        typedef s8 (*blit_sort_cmp)(void const *inItemA, void const *inItemB, void *inUserData);
+        typedef s8 (*sort_cmp_fn)(void const *inItemA, void const *inItemB, void *inUserData);
 
 #define BLIT_AUX 512  // set to 0 for sqrt(n) cache size
 #define BLIT_OUT 96   // should be smaller or equal to BLIT_AUX
 
         template <typename VAR>
-        void blit_partition(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, blit_sort_cmp cmp, void *user_data);
+        void blit_partition(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data);
 
         template <typename VAR>
-        void blit_analyze(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, blit_sort_cmp cmp, void *user_data)
+        void blit_analyze(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             unsigned char loop, asum, bsum, csum, dsum;
             unsigned int  astreaks, bstreaks, cstreaks, dstreaks;
@@ -309,7 +309,7 @@ namespace ncore
         // The next 4 functions are used for pivot selection
 
         template <typename VAR>
-        VAR blit_binary_median(VAR const *pta, VAR const *ptb, s32 len, blit_sort_cmp cmp, void *user_data)
+        VAR blit_binary_median(VAR const *pta, VAR const *ptb, s32 len, sort_cmp_fn cmp, void *user_data)
         {
             while (len /= 2)
             {
@@ -322,7 +322,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void blit_trim_four(VAR *pta, blit_sort_cmp cmp, void *user_data)
+        void blit_trim_four(VAR *pta, sort_cmp_fn cmp, void *user_data)
         {
             VAR swap;
             s32 x;
@@ -346,7 +346,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        VAR blit_median_of_nine(VAR const *array, VAR const *swap, s32 nmemb, blit_sort_cmp cmp, void *user_data)
+        VAR blit_median_of_nine(VAR const *array, VAR const *swap, s32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta;
             s32  x, y, z;
@@ -380,7 +380,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        VAR blit_median_of_cbrt(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, int *generic, blit_sort_cmp cmp, void *user_data)
+        VAR blit_median_of_cbrt(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, int *generic, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta, *ptb, *pts;
             s32  cnt, div, cbrt;
@@ -425,7 +425,7 @@ namespace ncore
         // As per suggestion by Marshall Lochbaum to improve generic data handling
 
         template <typename VAR>
-        s32 blit_reverse_partition(VAR *array, VAR *swap, VAR *piv, s32 swap_size, s32 nmemb, blit_sort_cmp cmp, void *user_data)
+        s32 blit_reverse_partition(VAR *array, VAR *swap, VAR *piv, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             if (nmemb > swap_size)
             {
@@ -466,7 +466,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        s32 blit_default_partition(VAR *array, VAR *swap, VAR *piv, s32 swap_size, s32 nmemb, blit_sort_cmp cmp, void *user_data)
+        s32 blit_default_partition(VAR *array, VAR *swap, VAR *piv, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             if (nmemb > swap_size)
             {
@@ -508,7 +508,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void blit_partition(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, blit_sort_cmp cmp, void *user_data)
+        void blit_partition(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             s32 a_size = 0, s_size;
             VAR piv, max = 0;
@@ -582,7 +582,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void blitsort(void *array, s32 nmemb, blit_sort_cmp cmp, void *user_data)
+        void blitsort(void *array, s32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             if (nmemb <= 132)
             {
@@ -608,7 +608,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void blitsort_swap(void *array, void *swap, s32 swap_size, s32 nmemb, blit_sort_cmp cmp, void *user_data)
+        void blitsort_swap(void *array, void *swap, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             if (nmemb <= 132)
             {
