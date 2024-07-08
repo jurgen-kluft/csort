@@ -1,5 +1,5 @@
-#ifndef __CBASE_QUICK_SORT_H__
-#define __CBASE_QUICK_SORT_H__
+#ifndef __CSORT_QUAD_SORT_INL__
+#define __CSORT_QUAD_SORT_INL__
 #include "ccore/c_target.h"
 #ifdef USE_PRAGMA_ONCE
 #    pragma once
@@ -10,12 +10,13 @@ namespace ncore
     namespace quad_sort
     {
         // quadsort 1.2.1.2 - Igor van den Hoven ivdhoven@gmail.com
+
+        typedef s8 (*sort_cmp_fn)(void const *inItemA, void const *inItemB, void *inUserData);
+
         // the next seven functions are used for sorting 0 to 31 elements
 
-        typedef s8 (*quad_sort_cmp)(void const *inItemA, void const *inItemB, void *inUserData);
-
         template <typename VAR>
-        void tiny_sort(VAR *array, u32 nmemb, quad_sort_cmp cmp, void *user_data)
+        void tiny_sort(VAR *array, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             VAR swap, *pta;
             u32 x, y;
@@ -91,7 +92,7 @@ namespace ncore
         // This function requires a minimum offset of 2 to work properly
 
         template <typename VAR>
-        void twice_unguarded_insert(VAR *array, u32 offset, u32 nmemb, quad_sort_cmp cmp, void *user_data)
+        void twice_unguarded_insert(VAR *array, u32 offset, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             VAR key, *pta, *end;
             u32 i, top, x, y;
@@ -138,7 +139,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void quad_swap_four(VAR *array, quad_sort_cmp cmp, void *user_data)
+        void quad_swap_four(VAR *array, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta, swap;
             u32  x, y;
@@ -166,7 +167,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void parity_swap_eight(VAR *array, VAR *swap, quad_sort_cmp cmp, void *user_data)
+        void parity_swap_eight(VAR *array, VAR *swap, sort_cmp_fn cmp, void *user_data)
         {
             VAR tmp, *ptl, *ptr, *pts;
             u32 x, y;
@@ -194,12 +195,11 @@ namespace ncore
         // left must be equal or one smaller than right
 
         template <typename VAR>
-        void parity_merge(VAR *dest, VAR *from, u32 left, u32 right, quad_sort_cmp cmp, void *user_data)
+        void parity_merge(VAR *dest, VAR *from, u32 left, u32 right, sort_cmp_fn cmp, void *user_data)
         {
             VAR *ptl, *ptr, *tpl, *tpr, *tpd, *ptd;
-#if !defined __clang__
             u32 x, y;
-#endif
+
             ptl = from;
             ptr = from + left;
             ptd = dest;
@@ -214,17 +214,6 @@ namespace ncore
 
             *ptd++ = cmp(ptl, ptr) <= 0 ? *ptl++ : *ptr++;
 
-#if !defined cmp && !defined __clang__  // cache limit workaround for gcc
-            if (left > QUAD_CACHE)
-            {
-                while (--left)
-                {
-                    *ptd++ = cmp(ptl, ptr) <= 0 ? *ptl++ : *ptr++;
-                    *tpd-- = cmp(tpl, tpr) > 0 ? *tpl-- : *tpr--;
-                }
-            }
-            else
-#endif
             {
                 while (--left)
                 {
@@ -236,12 +225,11 @@ namespace ncore
         }
 
         template <typename VAR>
-        void parity_swap_sixteen(VAR *array, VAR *swap, quad_sort_cmp cmp, void *user_data)
+        void parity_swap_sixteen(VAR *array, VAR *swap, sort_cmp_fn cmp, void *user_data)
         {
             VAR *ptl, *ptr, *pts;
-#if !defined __clang__
             u32 x, y;
-#endif
+
             quad_swap_four(array + 0, cmp);
             quad_swap_four(array + 4, cmp);
             quad_swap_four(array + 8, cmp);
@@ -258,7 +246,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void tail_swap(VAR *array, VAR *swap, u32 nmemb, quad_sort_cmp cmp, void *user_data)
+        void tail_swap(VAR *array, VAR *swap, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             if (nmemb < 5)
             {
@@ -348,12 +336,11 @@ namespace ncore
         }
 
         template <typename VAR>
-        void quad_swap_merge(VAR *array, VAR *swap, quad_sort_cmp cmp, void *user_data)
+        void quad_swap_merge(VAR *array, VAR *swap, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pts, *ptl, *ptr;
-#if !defined __clang__
             u32 x, y;
-#endif
+
             parity_merge_two(array + 0, swap + 0, x, y, ptl, ptr, pts, cmp);
             parity_merge_two(array + 4, swap + 4, x, y, ptl, ptr, pts, cmp);
 
@@ -361,10 +348,10 @@ namespace ncore
         }
 
         template <typename VAR>
-        void tail_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, quad_sort_cmp cmp, void *user_data);
+        void tail_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, sort_cmp_fn cmp, void *user_data);
 
         template <typename VAR>
-        u32 quad_swap(VAR *array, u32 nmemb, quad_sort_cmp cmp, void *user_data)
+        u32 quad_swap(VAR *array, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             VAR           tmp, swap[32];
             u32           count;
@@ -572,13 +559,12 @@ namespace ncore
         // quad merge support routines
 
         template <typename VAR>
-        void cross_merge(VAR *dest, VAR *from, u32 left, u32 right, quad_sort_cmp cmp, void *user_data)
+        void cross_merge(VAR *dest, VAR *from, u32 left, u32 right, sort_cmp_fn cmp, void *user_data)
         {
             VAR *ptl, *tpl, *ptr, *tpr, *ptd, *tpd;
             u32  loop;
-#if !defined __clang__
             u32 x, y;
-#endif
+
             ptl = from;
             ptr = from + left;
             tpl = ptr - 1;
@@ -652,19 +638,6 @@ namespace ncore
                     }
                     break;
                 }
-
-#if !defined cmp && !defined __clang__
-                if (left > QUAD_CACHE)
-                {
-                    loop = 8;
-                    do
-                    {
-                        *ptd++ = cmp(ptl, ptr) <= 0 ? *ptl++ : *ptr++;
-                        *tpd-- = cmp(tpl, tpr) > 0 ? *tpl-- : *tpr--;
-                    } while (--loop);
-                }
-                else
-#endif
                 {
                     loop = 8;
                     do
@@ -705,7 +678,7 @@ namespace ncore
         // main memory: [A  B  C  D] step 3
 
         template <typename VAR>
-        void quad_merge_block(VAR *array, VAR *swap, u32 block, quad_sort_cmp cmp, void *user_data)
+        void quad_merge_block(VAR *array, VAR *swap, u32 block, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pt1, *pt2, *pt3;
             u32  block_x_2 = block * 2;
@@ -737,7 +710,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        u32 quad_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, quad_sort_cmp cmp, void *user_data)
+        u32 quad_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta, *pte;
 
@@ -767,7 +740,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void partial_forward_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, quad_sort_cmp cmp, void *user_data)
+        void partial_forward_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, sort_cmp_fn cmp, void *user_data)
         {
             VAR *ptl, *ptr, *tpl, *tpr;
             u32  x, y;
@@ -827,7 +800,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void partial_backward_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, quad_sort_cmp cmp, void *user_data)
+        void partial_backward_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, sort_cmp_fn cmp, void *user_data)
         {
             VAR *tpl, *tpa, *tpr;  // tail pointer left, array, right
             u32  right, loop, x, y;
@@ -958,7 +931,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void tail_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, quad_sort_cmp cmp, void *user_data)
+        void tail_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta, *pte;
 
@@ -1148,7 +1121,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        u32 monobound_binary_first(VAR *array, VAR *value, u32 top, quad_sort_cmp cmp, void *user_data)
+        u32 monobound_binary_first(VAR *array, VAR *value, u32 top, sort_cmp_fn cmp, void *user_data)
         {
             VAR *end;
             u32  mid;
@@ -1174,7 +1147,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void rotate_merge_block(VAR *array, VAR *swap, u32 swap_size, u32 lblock, u32 right, quad_sort_cmp cmp, void *user_data)
+        void rotate_merge_block(VAR *array, VAR *swap, u32 swap_size, u32 lblock, u32 right, sort_cmp_fn cmp, void *user_data)
         {
             u32 left, rblock, unbalanced;
 
@@ -1243,7 +1216,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void rotate_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, quad_sort_cmp cmp, void *user_data)
+        void rotate_merge(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, u32 block, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta, *pte;
 
@@ -1286,7 +1259,7 @@ namespace ncore
         ///////////////////////////////////////////////////////////////////////////////
 
         template <typename VAR>
-        void quadsort(void *array, u32 nmemb, quad_sort_cmp cmp, void *user_data)
+        void quadsort(void *array, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta = (VAR *)array;
 
@@ -1322,7 +1295,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        void quadsort_swap(void *array, void *swap, u32 swap_size, u32 nmemb, quad_sort_cmp cmp, void *user_data)
+        void quadsort_swap(void *array, void *swap, u32 swap_size, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta = (VAR *)array;
             VAR *pts = (VAR *)swap;

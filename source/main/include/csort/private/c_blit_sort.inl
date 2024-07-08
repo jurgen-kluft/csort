@@ -1,5 +1,5 @@
-#ifndef __CBASE_QUICK_SORT_H__
-#define __CBASE_QUICK_SORT_H__
+#ifndef __CSORT_BLIT_SORT_INL__
+#define __CSORT_BLIT_SORT_INL__
 #include "ccore/c_target.h"
 #ifdef USE_PRAGMA_ONCE
 #    pragma once
@@ -13,6 +13,7 @@ namespace ncore
 
 #define BLIT_AUX 512  // set to 0 for sqrt(n) cache size
 #define BLIT_OUT 96   // should be smaller or equal to BLIT_AUX
+#define QUAD_CACHE 32
 
         template <typename VAR>
         void blit_partition(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data);
@@ -179,22 +180,18 @@ namespace ncore
                 }
             }
 
-#ifdef cmp
-            cnt = nmemb / 256;  // more than 50% ordered
-#else
             cnt = nmemb / 512;  // more than 25% ordered
-#endif
+
             asum = astreaks > cnt;
             bsum = bstreaks > cnt;
             csum = cstreaks > cnt;
             dsum = dstreaks > cnt;
 
-#ifndef cmp
             if (quad1 > QUAD_CACHE)
             {
                 asum = bsum = csum = dsum = 1;
             }
-#endif
+
             switch (asum + bsum * 2 + csum * 4 + dsum * 8)
             {
                 case 0: blit_partition(array, swap, swap_size, nmemb, cmp); return;
@@ -586,7 +583,7 @@ namespace ncore
         {
             if (nmemb <= 132)
             {
-                quadsort(array, nmemb, cmp);
+                quad_sort<VAR>(array, nmemb, cmp);
             }
             else
             {
