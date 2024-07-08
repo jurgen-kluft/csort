@@ -11,7 +11,45 @@ namespace ncore
     {
         // quadsort 1.2.1.2 - Igor van den Hoven ivdhoven@gmail.com
 
-        typedef s8 (*sort_cmp_fn)(void const *inItemA, void const *inItemB, void *inUserData);
+        void* malloc(u64 size);
+        void free(void* ptr);
+
+        void memcpy(void* dest, const void* src, u64 n);
+        void memset(void* s, int c, u64 n);
+        void memmove(void* dest, const void* src, u64 n);
+
+        template <typename VAR>
+        void swap_branchless(VAR* pta, VAR swap, u32 x, u32 y, sort_cmp_fn cmp, void* user_data)
+        {
+            // TODO
+        }
+
+        template <typename VAR>
+        void    parity_merge_two(VAR* array, VAR* swap, u32 x, u32 y, VAR*ptl, VAR*ptr, VAR*pts, sort_cmp_fn cmp, void* user_data)
+        {
+
+        }
+
+        template <typename VAR>
+        void    parity_merge_four(VAR*swap, VAR*array, u32 x, u32 y, VAR*ptl, VAR*ptr, VAR*pts, sort_cmp_fn cmp, void* user_data)
+        {
+
+        }
+
+        template <typename VAR>
+        void head_branchless_merge(VAR*ptd, u32 x, VAR*ptl, VAR*ptr, sort_cmp_fn cmp, void* user_data)
+        {
+            
+        }
+
+        template <typename VAR>
+        void tail_branchless_merge(VAR*ptd, u32 x, VAR*ptl, VAR*ptr, sort_cmp_fn cmp, void* user_data)
+        {
+            
+        }
+
+        template <typename VAR>
+        void quad_reversal(VAR *pta, VAR *ptz);
 
         // the next seven functions are used for sorting 0 to 31 elements
 
@@ -25,39 +63,39 @@ namespace ncore
             {
                 case 4:
                     pta    = array;
-                    x      = cmp(pta, pta + 1) > 0;
+                    x      = cmp(pta, pta + 1, user_data) > 0;
                     y      = !x;
                     swap   = pta[y];
                     pta[0] = pta[x];
                     pta[1] = swap;
                     pta += 2;
-                    x      = cmp(pta, pta + 1) > 0;
+                    x      = cmp(pta, pta + 1, user_data) > 0;
                     y      = !x;
                     swap   = pta[y];
                     pta[0] = pta[x];
                     pta[1] = swap;
                     pta--;
 
-                    if (cmp(pta, pta + 1) > 0)
+                    if (cmp(pta, pta + 1, user_data) > 0)
                     {
                         swap   = pta[0];
                         pta[0] = pta[1];
                         pta[1] = swap;
                         pta--;
 
-                        x      = cmp(pta, pta + 1) > 0;
+                        x      = cmp(pta, pta + 1, user_data) > 0;
                         y      = !x;
                         swap   = pta[y];
                         pta[0] = pta[x];
                         pta[1] = swap;
                         pta += 2;
-                        x      = cmp(pta, pta + 1) > 0;
+                        x      = cmp(pta, pta + 1, user_data) > 0;
                         y      = !x;
                         swap   = pta[y];
                         pta[0] = pta[x];
                         pta[1] = swap;
                         pta--;
-                        x      = cmp(pta, pta + 1) > 0;
+                        x      = cmp(pta, pta + 1, user_data) > 0;
                         y      = !x;
                         swap   = pta[y];
                         pta[0] = pta[x];
@@ -66,20 +104,20 @@ namespace ncore
                     return;
                 case 3:
                     pta    = array;
-                    x      = cmp(pta, pta + 1) > 0;
+                    x      = cmp(pta, pta + 1, user_data) > 0;
                     y      = !x;
                     swap   = pta[y];
                     pta[0] = pta[x];
                     pta[1] = swap;
                     pta++;
-                    x      = cmp(pta, pta + 1) > 0;
+                    x      = cmp(pta, pta + 1, user_data) > 0;
                     y      = !x;
                     swap   = pta[y];
                     pta[0] = pta[x];
                     pta[1] = swap;
                 case 2:
                     pta    = array;
-                    x      = cmp(pta, pta + 1) > 0;
+                    x      = cmp(pta, pta + 1, user_data) > 0;
                     y      = !x;
                     swap   = pta[y];
                     pta[0] = pta[x];
@@ -101,14 +139,14 @@ namespace ncore
             {
                 pta = end = array + i;
 
-                if (cmp(--pta, end) <= 0)
+                if (cmp(--pta, end, user_data) <= 0)
                 {
                     continue;
                 }
 
                 key = *end;
 
-                if (cmp(array + 1, &key) > 0)
+                if (cmp(array + 1, &key, user_data) > 0)
                 {
                     top = i - 1;
 
@@ -125,12 +163,12 @@ namespace ncore
                     {
                         *end-- = *pta--;
                         *end-- = *pta--;
-                    } while (cmp(pta, &key) > 0);
+                    } while (cmp(pta, &key, user_data) > 0);
 
                     end[0] = end[1];
                     end[1] = key;
                 }
-                x      = cmp(end, end + 1) > 0;
+                x      = cmp(end, end + 1, user_data) > 0;
                 y      = !x;
                 key    = end[y];
                 end[0] = end[x];
@@ -146,23 +184,23 @@ namespace ncore
 
             pta = array;
 
-            swap_branchless(pta, swap, x, y, cmp);
+            swap_branchless(pta, swap, x, y, cmp, user_data);
             pta += 2;
-            swap_branchless(pta, swap, x, y, cmp);
+            swap_branchless(pta, swap, x, y, cmp, user_data);
             pta--;
 
-            if (cmp(pta, pta + 1) > 0)
+            if (cmp(pta, pta + 1, user_data) > 0)
             {
                 swap   = pta[0];
                 pta[0] = pta[1];
                 pta[1] = swap;
                 pta--;
 
-                swap_branchless(pta, swap, x, y, cmp);
+                swap_branchless(pta, swap, x, y, cmp, user_data);
                 pta += 2;
-                swap_branchless(pta, swap, x, y, cmp);
+                swap_branchless(pta, swap, x, y, cmp, user_data);
                 pta--;
-                swap_branchless(pta, swap, x, y, cmp);
+                swap_branchless(pta, swap, x, y, cmp, user_data);
             }
         }
 
@@ -174,22 +212,22 @@ namespace ncore
 
             ptl = array;
 
-            swap_branchless(ptl, tmp, x, y, cmp);
+            swap_branchless(ptl, tmp, x, y, cmp, user_data);
             ptl += 2;
-            swap_branchless(ptl, tmp, x, y, cmp);
+            swap_branchless(ptl, tmp, x, y, cmp, user_data);
             ptl += 2;
-            swap_branchless(ptl, tmp, x, y, cmp);
+            swap_branchless(ptl, tmp, x, y, cmp, user_data);
             ptl += 2;
-            swap_branchless(ptl, tmp, x, y, cmp);
+            swap_branchless(ptl, tmp, x, y, cmp, user_data);
 
-            if (cmp(array + 1, array + 2) <= 0 && cmp(array + 3, array + 4) <= 0 && cmp(array + 5, array + 6) <= 0)
+            if (cmp(array + 1, array + 2, user_data) <= 0 && cmp(array + 3, array + 4, user_data) <= 0 && cmp(array + 5, array + 6, user_data) <= 0)
             {
                 return;
             }
-            parity_merge_two(array + 0, swap + 0, x, y, ptl, ptr, pts, cmp);
-            parity_merge_two(array + 4, swap + 4, x, y, ptl, ptr, pts, cmp);
+            parity_merge_two(array + 0, swap + 0, x, y, ptl, ptr, pts, cmp, user_data);
+            parity_merge_two(array + 4, swap + 4, x, y, ptl, ptr, pts, cmp, user_data);
 
-            parity_merge_four(swap, array, x, y, ptl, ptr, pts, cmp);
+            parity_merge_four(swap, array, x, y, ptl, ptr, pts, cmp, user_data);
         }
 
         // left must be equal or one smaller than right
@@ -198,7 +236,7 @@ namespace ncore
         void parity_merge(VAR *dest, VAR *from, u32 left, u32 right, sort_cmp_fn cmp, void *user_data)
         {
             VAR *ptl, *ptr, *tpl, *tpr, *tpd, *ptd;
-            u32 x, y;
+            u32  x, y;
 
             ptl = from;
             ptr = from + left;
@@ -209,40 +247,40 @@ namespace ncore
 
             if (left < right)
             {
-                *ptd++ = cmp(ptl, ptr) <= 0 ? *ptl++ : *ptr++;
+                *ptd++ = cmp(ptl, ptr, user_data) <= 0 ? *ptl++ : *ptr++;
             }
 
-            *ptd++ = cmp(ptl, ptr) <= 0 ? *ptl++ : *ptr++;
+            *ptd++ = cmp(ptl, ptr, user_data) <= 0 ? *ptl++ : *ptr++;
 
             {
                 while (--left)
                 {
-                    head_branchless_merge(ptd, x, ptl, ptr, cmp);
-                    tail_branchless_merge(tpd, y, tpl, tpr, cmp);
+                    head_branchless_merge(ptd, x, ptl, ptr, cmp, user_data);
+                    tail_branchless_merge(tpd, y, tpl, tpr, cmp, user_data);
                 }
             }
-            *tpd = cmp(tpl, tpr) > 0 ? *tpl : *tpr;
+            *tpd = cmp(tpl, tpr, user_data) > 0 ? *tpl : *tpr;
         }
 
         template <typename VAR>
         void parity_swap_sixteen(VAR *array, VAR *swap, sort_cmp_fn cmp, void *user_data)
         {
             VAR *ptl, *ptr, *pts;
-            u32 x, y;
+            u32  x, y;
 
-            quad_swap_four(array + 0, cmp);
-            quad_swap_four(array + 4, cmp);
-            quad_swap_four(array + 8, cmp);
-            quad_swap_four(array + 12, cmp);
+            quad_swap_four(array + 0, cmp, user_data);
+            quad_swap_four(array + 4, cmp, user_data);
+            quad_swap_four(array + 8, cmp, user_data);
+            quad_swap_four(array + 12, cmp, user_data);
 
-            if (cmp(array + 3, array + 4) <= 0 && cmp(array + 7, array + 8) <= 0 && cmp(array + 11, array + 12) <= 0)
+            if (cmp(array + 3, array + 4, user_data) <= 0 && cmp(array + 7, array + 8, user_data) <= 0 && cmp(array + 11, array + 12, user_data) <= 0)
             {
                 return;
             }
-            parity_merge_four(array + 0, swap + 0, x, y, ptl, ptr, pts, cmp);
-            parity_merge_four(array + 8, swap + 8, x, y, ptl, ptr, pts, cmp);
+            parity_merge_four(array + 0, swap + 0, x, y, ptl, ptr, pts, cmp, user_data);
+            parity_merge_four(array + 8, swap + 8, x, y, ptl, ptr, pts, cmp, user_data);
 
-            parity_merge(array, swap, 8, 8, cmp);
+            parity_merge(array, swap, 8, 8, cmp, user_data);
         }
 
         template <typename VAR>
@@ -250,25 +288,25 @@ namespace ncore
         {
             if (nmemb < 5)
             {
-                tiny_sort(array, nmemb, cmp);
+                tiny_sort(array, nmemb, cmp, user_data);
                 return;
             }
             if (nmemb < 8)
             {
-                quad_swap_four(array, cmp);
-                twice_unguarded_insert(array, 4, nmemb, cmp);
+                quad_swap_four(array, cmp, user_data);
+                twice_unguarded_insert(array, 4, nmemb, cmp, user_data);
                 return;
             }
             if (nmemb < 12)
             {
-                parity_swap_eight(array, swap, cmp);
-                twice_unguarded_insert(array, 8, nmemb, cmp);
+                parity_swap_eight(array, swap, cmp, user_data);
+                twice_unguarded_insert(array, 8, nmemb, cmp, user_data);
                 return;
             }
             if (nmemb >= 16 && nmemb < 24)
             {
-                parity_swap_sixteen(array, swap, cmp);
-                twice_unguarded_insert(array, 16, nmemb, cmp);
+                parity_swap_sixteen(array, swap, cmp, user_data);
+                twice_unguarded_insert(array, 16, nmemb, cmp, user_data);
                 return;
             }
 
@@ -284,22 +322,22 @@ namespace ncore
 
             VAR *pta = array;
 
-            tail_swap(pta, swap, quad1, cmp);
+            tail_swap(pta, swap, quad1, cmp, user_data);
             pta += quad1;
-            tail_swap(pta, swap, quad2, cmp);
+            tail_swap(pta, swap, quad2, cmp, user_data);
             pta += quad2;
-            tail_swap(pta, swap, quad3, cmp);
+            tail_swap(pta, swap, quad3, cmp, user_data);
             pta += quad3;
-            tail_swap(pta, swap, quad4, cmp);
+            tail_swap(pta, swap, quad4, cmp, user_data);
 
-            if (cmp(array + quad1 - 1, array + quad1) <= 0 && cmp(array + half1 - 1, array + half1) <= 0 && cmp(pta - 1, pta) <= 0)
+            if (cmp(array + quad1 - 1, array + quad1, user_data) <= 0 && cmp(array + half1 - 1, array + half1, user_data) <= 0 && cmp(pta - 1, pta, user_data) <= 0)
             {
                 return;
             }
 
-            parity_merge(swap, array, quad1, quad2, cmp);
-            parity_merge(swap + half1, array + half1, quad3, quad4, cmp);
-            parity_merge(array, swap, half1, half2, cmp);
+            parity_merge(swap, array, quad1, quad2, cmp, user_data);
+            parity_merge(swap + half1, array + half1, quad3, quad4, cmp, user_data);
+            parity_merge(array, swap, half1, half2, cmp, user_data);
         }
 
         // the next three functions create sorted blocks of 32 elements
@@ -339,12 +377,12 @@ namespace ncore
         void quad_swap_merge(VAR *array, VAR *swap, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pts, *ptl, *ptr;
-            u32 x, y;
+            u32  x, y;
 
-            parity_merge_two(array + 0, swap + 0, x, y, ptl, ptr, pts, cmp);
-            parity_merge_two(array + 4, swap + 4, x, y, ptl, ptr, pts, cmp);
+            parity_merge_two(array + 0, swap + 0, x, y, ptl, ptr, pts, cmp, user_data);
+            parity_merge_two(array + 4, swap + 4, x, y, ptl, ptr, pts, cmp, user_data);
 
-            parity_merge_four(swap, array, x, y, ptl, ptr, pts, cmp);
+            parity_merge_four(swap, array, x, y, ptl, ptr, pts, cmp, user_data);
         }
 
         template <typename VAR>
@@ -363,23 +401,23 @@ namespace ncore
 
             while (count--)
             {
-                v1 = cmp(pta + 0, pta + 1) > 0;
-                v2 = cmp(pta + 2, pta + 3) > 0;
-                v3 = cmp(pta + 4, pta + 5) > 0;
-                v4 = cmp(pta + 6, pta + 7) > 0;
+                v1 = cmp(pta + 0, pta + 1, user_data) > 0;
+                v2 = cmp(pta + 2, pta + 3, user_data) > 0;
+                v3 = cmp(pta + 4, pta + 5, user_data) > 0;
+                v4 = cmp(pta + 6, pta + 7, user_data) > 0;
 
                 switch (v1 + v2 * 2 + v3 * 4 + v4 * 8)
                 {
                     case 0:
-                        if (cmp(pta + 1, pta + 2) <= 0 && cmp(pta + 3, pta + 4) <= 0 && cmp(pta + 5, pta + 6) <= 0)
+                        if (cmp(pta + 1, pta + 2, user_data) <= 0 && cmp(pta + 3, pta + 4, user_data) <= 0 && cmp(pta + 5, pta + 6, user_data) <= 0)
                         {
                             goto ordered;
                         }
-                        quad_swap_merge(pta, swap, cmp);
+                        quad_swap_merge(pta, swap, cmp, user_data);
                         break;
 
                     case 15:
-                        if (cmp(pta + 1, pta + 2) > 0 && cmp(pta + 3, pta + 4) > 0 && cmp(pta + 5, pta + 6) > 0)
+                        if (cmp(pta + 1, pta + 2, user_data) > 0 && cmp(pta + 3, pta + 4, user_data) > 0 && cmp(pta + 5, pta + 6, user_data) > 0)
                         {
                             pts = pta;
                             goto reversed;
@@ -408,7 +446,7 @@ namespace ncore
                         pta[1] = tmp;
                         pta -= 6;
 
-                        quad_swap_merge(pta, swap, cmp);
+                        quad_swap_merge(pta, swap, cmp, user_data);
                 }
                 pta += 8;
 
@@ -420,20 +458,20 @@ namespace ncore
 
                 if (count--)
                 {
-                    if ((v1 = cmp(pta + 0, pta + 1) > 0) | (v2 = cmp(pta + 2, pta + 3) > 0) | (v3 = cmp(pta + 4, pta + 5) > 0) | (v4 = cmp(pta + 6, pta + 7) > 0))
+                    if ((v1 = cmp(pta + 0, pta + 1, user_data) > 0) | (v2 = cmp(pta + 2, pta + 3, user_data) > 0) | (v3 = cmp(pta + 4, pta + 5, user_data) > 0) | (v4 = cmp(pta + 6, pta + 7, user_data) > 0))
                     {
-                        if (v1 + v2 + v3 + v4 == 4 && cmp(pta + 1, pta + 2) > 0 && cmp(pta + 3, pta + 4) > 0 && cmp(pta + 5, pta + 6) > 0)
+                        if (v1 + v2 + v3 + v4 == 4 && cmp(pta + 1, pta + 2, user_data) > 0 && cmp(pta + 3, pta + 4, user_data) > 0 && cmp(pta + 5, pta + 6, user_data) > 0)
                         {
                             pts = pta;
                             goto reversed;
                         }
                         goto not_ordered;
                     }
-                    if (cmp(pta + 1, pta + 2) <= 0 && cmp(pta + 3, pta + 4) <= 0 && cmp(pta + 5, pta + 6) <= 0)
+                    if (cmp(pta + 1, pta + 2, user_data) <= 0 && cmp(pta + 3, pta + 4, user_data) <= 0 && cmp(pta + 5, pta + 6, user_data) <= 0)
                     {
                         goto ordered;
                     }
-                    quad_swap_merge(pta, swap, cmp);
+                    quad_swap_merge(pta, swap, cmp, user_data);
                     pta += 8;
                     continue;
                 }
@@ -445,24 +483,24 @@ namespace ncore
 
                 if (count--)
                 {
-                    if ((v1 = cmp(pta + 0, pta + 1) <= 0) | (v2 = cmp(pta + 2, pta + 3) <= 0) | (v3 = cmp(pta + 4, pta + 5) <= 0) | (v4 = cmp(pta + 6, pta + 7) <= 0))
+                    if ((v1 = cmp(pta + 0, pta + 1, user_data) <= 0) | (v2 = cmp(pta + 2, pta + 3, user_data) <= 0) | (v3 = cmp(pta + 4, pta + 5, user_data) <= 0) | (v4 = cmp(pta + 6, pta + 7, user_data) <= 0))
                     {
                         // not reversed
                     }
                     else
                     {
-                        if (cmp(pta - 1, pta) > 0 && cmp(pta + 1, pta + 2) > 0 && cmp(pta + 3, pta + 4) > 0 && cmp(pta + 5, pta + 6) > 0)
+                        if (cmp(pta - 1, pta, user_data) > 0 && cmp(pta + 1, pta + 2, user_data) > 0 && cmp(pta + 3, pta + 4, user_data) > 0 && cmp(pta + 5, pta + 6, user_data) > 0)
                         {
                             goto reversed;
                         }
                     }
                     quad_reversal(pts, pta - 1);
 
-                    if (v1 + v2 + v3 + v4 == 4 && cmp(pta + 1, pta + 2) <= 0 && cmp(pta + 3, pta + 4) <= 0 && cmp(pta + 5, pta + 6) <= 0)
+                    if (v1 + v2 + v3 + v4 == 4 && cmp(pta + 1, pta + 2, user_data) <= 0 && cmp(pta + 3, pta + 4, user_data) <= 0 && cmp(pta + 5, pta + 6, user_data) <= 0)
                     {
                         goto ordered;
                     }
-                    if (v1 + v2 + v3 + v4 == 0 && cmp(pta + 1, pta + 2) > 0 && cmp(pta + 3, pta + 4) > 0 && cmp(pta + 5, pta + 6) > 0)
+                    if (v1 + v2 + v3 + v4 == 0 && cmp(pta + 1, pta + 2, user_data) > 0 && cmp(pta + 3, pta + 4, user_data) > 0 && cmp(pta + 5, pta + 6, user_data) > 0)
                     {
                         pts = pta;
                         goto reversed;
@@ -489,9 +527,9 @@ namespace ncore
                     pta[1] = tmp;
                     pta -= 6;
 
-                    if (cmp(pta + 1, pta + 2) > 0 || cmp(pta + 3, pta + 4) > 0 || cmp(pta + 5, pta + 6) > 0)
+                    if (cmp(pta + 1, pta + 2, user_data) > 0 || cmp(pta + 3, pta + 4, user_data) > 0 || cmp(pta + 5, pta + 6, user_data) > 0)
                     {
-                        quad_swap_merge(pta, swap, cmp);
+                        quad_swap_merge(pta, swap, cmp, user_data);
                     }
                     pta += 8;
                     continue;
@@ -500,25 +538,25 @@ namespace ncore
                 switch (nmemb % 8)
                 {
                     case 7:
-                        if (cmp(pta + 5, pta + 6) <= 0)
+                        if (cmp(pta + 5, pta + 6, user_data) <= 0)
                             break;
                     case 6:
-                        if (cmp(pta + 4, pta + 5) <= 0)
+                        if (cmp(pta + 4, pta + 5, user_data) <= 0)
                             break;
                     case 5:
-                        if (cmp(pta + 3, pta + 4) <= 0)
+                        if (cmp(pta + 3, pta + 4, user_data) <= 0)
                             break;
                     case 4:
-                        if (cmp(pta + 2, pta + 3) <= 0)
+                        if (cmp(pta + 2, pta + 3, user_data) <= 0)
                             break;
                     case 3:
-                        if (cmp(pta + 1, pta + 2) <= 0)
+                        if (cmp(pta + 1, pta + 2, user_data) <= 0)
                             break;
                     case 2:
-                        if (cmp(pta + 0, pta + 1) <= 0)
+                        if (cmp(pta + 0, pta + 1, user_data) <= 0)
                             break;
                     case 1:
-                        if (cmp(pta - 1, pta + 0) <= 0)
+                        if (cmp(pta - 1, pta + 0, user_data) <= 0)
                             break;
                     case 0:
                         quad_reversal(pts, pta + nmemb % 8 - 1);
@@ -532,7 +570,7 @@ namespace ncore
                 quad_reversal(pts, pta - 1);
                 break;
             }
-            tail_swap(pta, swap, nmemb % 8, cmp);
+            tail_swap(pta, swap, nmemb % 8, cmp, user_data);
 
         reverse_end:
 
@@ -540,18 +578,18 @@ namespace ncore
 
             for (count = nmemb / 32; count--; pta += 32)
             {
-                if (cmp(pta + 7, pta + 8) <= 0 && cmp(pta + 15, pta + 16) <= 0 && cmp(pta + 23, pta + 24) <= 0)
+                if (cmp(pta + 7, pta + 8, user_data) <= 0 && cmp(pta + 15, pta + 16, user_data) <= 0 && cmp(pta + 23, pta + 24, user_data) <= 0)
                 {
                     continue;
                 }
-                parity_merge(swap, pta, 8, 8, cmp);
-                parity_merge(swap + 16, pta + 16, 8, 8, cmp);
-                parity_merge(pta, swap, 16, 16, cmp);
+                parity_merge(swap, pta, 8, 8, cmp, user_data);
+                parity_merge(swap + 16, pta + 16, 8, 8, cmp, user_data);
+                parity_merge(pta, swap, 16, 16, cmp, user_data);
             }
 
             if (nmemb % 32 > 8)
             {
-                tail_merge(pta, swap, 32, nmemb % 32, 8, cmp);
+                tail_merge(pta, swap, 32, nmemb % 32, 8, cmp, user_data);
             }
             return 0;
         }
@@ -563,7 +601,7 @@ namespace ncore
         {
             VAR *ptl, *tpl, *ptr, *tpr, *ptd, *tpd;
             u32  loop;
-            u32 x, y;
+            u32  x, y;
 
             ptl = from;
             ptr = from + left;
@@ -572,9 +610,9 @@ namespace ncore
 
             if (left + 1 >= right && right + 1 >= left && left >= 32)
             {
-                if (cmp(ptl + 15, ptr) > 0 && cmp(ptl, ptr + 15) <= 0 && cmp(tpl, tpr - 15) > 0 && cmp(tpl - 15, tpr) <= 0)
+                if (cmp(ptl + 15, ptr, user_data) > 0 && cmp(ptl, ptr + 15, user_data) <= 0 && cmp(tpl, tpr - 15, user_data) > 0 && cmp(tpl - 15, tpr, user_data) <= 0)
                 {
-                    parity_merge(dest, from, left, right, cmp);
+                    parity_merge(dest, from, left, right, cmp, user_data);
                     return;
                 }
             }
@@ -584,7 +622,7 @@ namespace ncore
             while (tpl - ptl > 8 && tpr - ptr > 8)
             {
             ptl8_ptr:
-                if (cmp(ptl + 7, ptr) <= 0)
+                if (cmp(ptl + 7, ptr, user_data) <= 0)
                 {
                     memcpy(ptd, ptl, 8 * sizeof(VAR));
                     ptd += 8;
@@ -598,7 +636,7 @@ namespace ncore
                 }
 
             ptl_ptr8:
-                if (cmp(ptl, ptr + 7) > 0)
+                if (cmp(ptl, ptr + 7, user_data) > 0)
                 {
                     memcpy(ptd, ptr, 8 * sizeof(VAR));
                     ptd += 8;
@@ -612,7 +650,7 @@ namespace ncore
                 }
 
             tpl_tpr8:
-                if (cmp(tpl, tpr - 7) <= 0)
+                if (cmp(tpl, tpr - 7, user_data) <= 0)
                 {
                     tpd -= 7;
                     tpr -= 7;
@@ -626,7 +664,7 @@ namespace ncore
                 }
 
             tpl8_tpr:
-                if (cmp(tpl - 7, tpr) > 0)
+                if (cmp(tpl - 7, tpr, user_data) > 0)
                 {
                     tpd -= 7;
                     tpl -= 7;
@@ -642,17 +680,17 @@ namespace ncore
                     loop = 8;
                     do
                     {
-                        head_branchless_merge(ptd, x, ptl, ptr, cmp);
-                        tail_branchless_merge(tpd, y, tpl, tpr, cmp);
+                        head_branchless_merge(ptd, x, ptl, ptr, cmp, user_data);
+                        tail_branchless_merge(tpd, y, tpl, tpr, cmp, user_data);
                     } while (--loop);
                 }
             }
 
-            if (cmp(tpl, tpr) <= 0)
+            if (cmp(tpl, tpr, user_data) <= 0)
             {
                 while (ptl <= tpl)
                 {
-                    *ptd++ = cmp(ptl, ptr) <= 0 ? *ptl++ : *ptr++;
+                    *ptd++ = cmp(ptl, ptr, user_data) <= 0 ? *ptl++ : *ptr++;
                 }
                 while (ptr <= tpr)
                 {
@@ -663,7 +701,7 @@ namespace ncore
             {
                 while (ptr <= tpr)
                 {
-                    *ptd++ = cmp(ptl, ptr) <= 0 ? *ptl++ : *ptr++;
+                    *ptd++ = cmp(ptl, ptr, user_data) <= 0 ? *ptl++ : *ptr++;
                 }
                 while (ptl <= tpl)
                 {
@@ -687,26 +725,26 @@ namespace ncore
             pt2 = pt1 + block;
             pt3 = pt2 + block;
 
-            switch ((cmp(pt1 - 1, pt1) <= 0) | (cmp(pt3 - 1, pt3) <= 0) * 2)
+            switch ((cmp(pt1 - 1, pt1, user_data) <= 0) | (cmp(pt3 - 1, pt3, user_data) <= 0) * 2)
             {
                 case 0:
-                    cross_merge(swap, array, block, block, cmp);
-                    cross_merge(swap + block_x_2, pt2, block, block, cmp);
+                    cross_merge(swap, array, block, block, cmp, user_data);
+                    cross_merge(swap + block_x_2, pt2, block, block, cmp, user_data);
                     break;
                 case 1:
                     memcpy(swap, array, block_x_2 * sizeof(VAR));
-                    cross_merge(swap + block_x_2, pt2, block, block, cmp);
+                    cross_merge(swap + block_x_2, pt2, block, block, cmp, user_data);
                     break;
                 case 2:
-                    cross_merge(swap, array, block, block, cmp);
+                    cross_merge(swap, array, block, block, cmp, user_data);
                     memcpy(swap + block_x_2, pt2, block_x_2 * sizeof(VAR));
                     break;
                 case 3:
-                    if (cmp(pt2 - 1, pt2) <= 0)
+                    if (cmp(pt2 - 1, pt2, user_data) <= 0)
                         return;
                     memcpy(swap, array, block_x_2 * 2 * sizeof(VAR));
             }
-            cross_merge(array, swap, block_x_2, block_x_2, cmp);
+            cross_merge(array, swap, block_x_2, block_x_2, cmp, user_data);
         }
 
         template <typename VAR>
@@ -724,17 +762,17 @@ namespace ncore
 
                 do
                 {
-                    quad_merge_block(pta, swap, block / 4, cmp);
+                    quad_merge_block(pta, swap, block / 4, cmp, user_data);
 
                     pta += block;
                 } while (pta + block <= pte);
 
-                tail_merge(pta, swap, swap_size, pte - pta, block / 4, cmp);
+                tail_merge(pta, swap, swap_size, pte - pta, block / 4, cmp, user_data);
 
                 block *= 4;
             }
 
-            tail_merge(array, swap, swap_size, nmemb, block / 4, cmp);
+            tail_merge(array, swap, swap_size, nmemb, block / 4, cmp, user_data);
 
             return block / 2;
         }
@@ -753,7 +791,7 @@ namespace ncore
             ptr = array + block;
             tpr = array + nmemb - 1;
 
-            if (cmp(ptr - 1, ptr) <= 0)
+            if (cmp(ptr - 1, ptr, user_data) <= 0)
             {
                 return;
             }
@@ -765,32 +803,32 @@ namespace ncore
 
             while (ptl < tpl - 1 && ptr < tpr - 1)
             {
-                if (cmp(ptl, ptr + 1) > 0)
+                if (cmp(ptl, ptr + 1, user_data) > 0)
                 {
                     *array++ = *ptr++;
                     *array++ = *ptr++;
                 }
-                else if (cmp(ptl + 1, ptr) <= 0)
+                else if (cmp(ptl + 1, ptr, user_data) <= 0)
                 {
                     *array++ = *ptl++;
                     *array++ = *ptl++;
                 }
                 else
                 {
-                    x        = cmp(ptl, ptr) <= 0;
+                    x        = cmp(ptl, ptr, user_data) <= 0;
                     y        = !x;
                     array[x] = *ptr;
                     ptr += 1;
                     array[y] = *ptl;
                     ptl += 1;
                     array += 2;
-                    head_branchless_merge(array, x, ptl, ptr, cmp);
+                    head_branchless_merge(array, x, ptl, ptr, cmp, user_data);
                 }
             }
 
             while (ptl <= tpl && ptr <= tpr)
             {
-                *array++ = cmp(ptl, ptr) <= 0 ? *ptl++ : *ptr++;
+                *array++ = cmp(ptl, ptr, user_data) <= 0 ? *ptl++ : *ptr++;
             }
 
             while (ptl <= tpl)
@@ -813,7 +851,7 @@ namespace ncore
             tpl = array + block - 1;
             tpa = array + nmemb - 1;
 
-            if (cmp(tpl, tpl + 1) <= 0)
+            if (cmp(tpl, tpl + 1, user_data) <= 0)
             {
                 return;
             }
@@ -822,7 +860,7 @@ namespace ncore
 
             if (nmemb <= swap_size && right >= 64)
             {
-                cross_merge(swap, array, block, right, cmp);
+                cross_merge(swap, array, block, right, cmp, user_data);
 
                 memcpy(array, swap, nmemb * sizeof(VAR));
 
@@ -836,7 +874,7 @@ namespace ncore
             while (tpl > array + 16 && tpr > swap + 16)
             {
             tpl_tpr16:
-                if (cmp(tpl, tpr - 15) <= 0)
+                if (cmp(tpl, tpr - 15, user_data) <= 0)
                 {
                     loop = 16;
                     do
@@ -851,7 +889,7 @@ namespace ncore
                 }
 
             tpl16_tpr:
-                if (cmp(tpl - 15, tpr) > 0)
+                if (cmp(tpl - 15, tpr, user_data) > 0)
                 {
                     loop = 16;
                     do
@@ -868,19 +906,19 @@ namespace ncore
                 loop = 8;
                 do
                 {
-                    if (cmp(tpl, tpr - 1) <= 0)
+                    if (cmp(tpl, tpr - 1, user_data) <= 0)
                     {
                         *tpa-- = *tpr--;
                         *tpa-- = *tpr--;
                     }
-                    else if (cmp(tpl - 1, tpr) > 0)
+                    else if (cmp(tpl - 1, tpr, user_data) > 0)
                     {
                         *tpa-- = *tpl--;
                         *tpa-- = *tpl--;
                     }
                     else
                     {
-                        x = cmp(tpl, tpr) <= 0;
+                        x = cmp(tpl, tpr, user_data) <= 0;
                         y = !x;
                         tpa--;
                         tpa[x] = *tpr;
@@ -888,26 +926,26 @@ namespace ncore
                         tpa[y] = *tpl;
                         tpl -= 1;
                         tpa--;
-                        tail_branchless_merge(tpa, y, tpl, tpr, cmp);
+                        tail_branchless_merge(tpa, y, tpl, tpr, cmp, user_data);
                     }
                 } while (--loop);
             }
 
             while (tpr > swap + 1 && tpl > array + 1)
             {
-                if (cmp(tpl, tpr - 1) <= 0)
+                if (cmp(tpl, tpr - 1, user_data) <= 0)
                 {
                     *tpa-- = *tpr--;
                     *tpa-- = *tpr--;
                 }
-                else if (cmp(tpl - 1, tpr) > 0)
+                else if (cmp(tpl - 1, tpr, user_data) > 0)
                 {
                     *tpa-- = *tpl--;
                     *tpa-- = *tpl--;
                 }
                 else
                 {
-                    x = cmp(tpl, tpr) <= 0;
+                    x = cmp(tpl, tpr, user_data) <= 0;
                     y = !x;
                     tpa--;
                     tpa[x] = *tpr;
@@ -915,13 +953,13 @@ namespace ncore
                     tpa[y] = *tpl;
                     tpl -= 1;
                     tpa--;
-                    tail_branchless_merge(tpa, y, tpl, tpr, cmp);
+                    tail_branchless_merge(tpa, y, tpl, tpr, cmp, user_data);
                 }
             }
 
             while (tpr >= swap && tpl >= array)
             {
-                *tpa-- = cmp(tpl, tpr) > 0 ? *tpl-- : *tpr--;
+                *tpa-- = cmp(tpl, tpr, user_data) > 0 ? *tpl-- : *tpr--;
             }
 
             while (tpr >= swap)
@@ -943,11 +981,11 @@ namespace ncore
                 {
                     if (pta + block * 2 < pte)
                     {
-                        partial_backward_merge(pta, swap, swap_size, block * 2, block, cmp);
+                        partial_backward_merge(pta, swap, swap_size, block * 2, block, cmp, user_data);
 
                         continue;
                     }
-                    partial_backward_merge(pta, swap, swap_size, pte - pta, block, cmp);
+                    partial_backward_merge(pta, swap, swap_size, pte - pta, block, cmp, user_data);
 
                     break;
                 }
@@ -1132,14 +1170,14 @@ namespace ncore
             {
                 mid = top / 2;
 
-                if (cmp(value, end - mid) <= 0)
+                if (cmp(value, end - mid, user_data) <= 0)
                 {
                     end -= mid;
                 }
                 top -= mid;
             }
 
-            if (cmp(value, end - 1) <= 0)
+            if (cmp(value, end - 1, user_data) <= 0)
             {
                 end--;
             }
@@ -1151,7 +1189,7 @@ namespace ncore
         {
             u32 left, rblock, unbalanced;
 
-            if (cmp(array + lblock - 1, array + lblock) <= 0)
+            if (cmp(array + lblock - 1, array + lblock, user_data) <= 0)
             {
                 return;
             }
@@ -1159,7 +1197,7 @@ namespace ncore
             rblock = lblock / 2;
             lblock -= rblock;
 
-            left = monobound_binary_first(array + lblock + rblock, array + lblock, right, cmp);
+            left = monobound_binary_first(array + lblock + rblock, array + lblock, right, cmp, user_data);
 
             right -= left;
 
@@ -1173,7 +1211,7 @@ namespace ncore
                     memcpy(swap + lblock, array + lblock + rblock, left * sizeof(VAR));
                     memmove(array + lblock + left, array + lblock, rblock * sizeof(VAR));
 
-                    cross_merge(array, swap, lblock, left, cmp);
+                    cross_merge(array, swap, lblock, left, cmp, user_data);
                 }
                 else
                 {
@@ -1183,15 +1221,15 @@ namespace ncore
 
                     if (unbalanced && left <= swap_size)
                     {
-                        partial_backward_merge(array, swap, swap_size, lblock + left, lblock, cmp);
+                        partial_backward_merge(array, swap, swap_size, lblock + left, lblock, cmp, user_data);
                     }
                     else if (unbalanced && lblock <= swap_size)
                     {
-                        partial_forward_merge(array, swap, swap_size, lblock + left, lblock, cmp);
+                        partial_forward_merge(array, swap, swap_size, lblock + left, lblock, cmp, user_data);
                     }
                     else
                     {
-                        rotate_merge_block(array, swap, swap_size, lblock, left, cmp);
+                        rotate_merge_block(array, swap, swap_size, lblock, left, cmp, user_data);
                     }
                 }
             }
@@ -1202,15 +1240,15 @@ namespace ncore
 
                 if ((unbalanced && right <= swap_size) || right + rblock <= swap_size)
                 {
-                    partial_backward_merge(array + lblock + left, swap, swap_size, rblock + right, rblock, cmp);
+                    partial_backward_merge(array + lblock + left, swap, swap_size, rblock + right, rblock, cmp, user_data);
                 }
                 else if (unbalanced && rblock <= swap_size)
                 {
-                    partial_forward_merge(array + lblock + left, swap, swap_size, rblock + right, rblock, cmp);
+                    partial_forward_merge(array + lblock + left, swap, swap_size, rblock + right, rblock, cmp, user_data);
                 }
                 else
                 {
-                    rotate_merge_block(array + lblock + left, swap, swap_size, rblock, right, cmp);
+                    rotate_merge_block(array + lblock + left, swap, swap_size, rblock, right, cmp, user_data);
                 }
             }
         }
@@ -1224,7 +1262,7 @@ namespace ncore
 
             if (nmemb <= block * 2 && nmemb - block <= swap_size)
             {
-                partial_backward_merge(array, swap, swap_size, nmemb, block, cmp);
+                partial_backward_merge(array, swap, swap_size, nmemb, block, cmp, user_data);
 
                 return;
             }
@@ -1235,11 +1273,11 @@ namespace ncore
                 {
                     if (pta + block * 2 < pte)
                     {
-                        rotate_merge_block(pta, swap, swap_size, block, block, cmp);
+                        rotate_merge_block(pta, swap, swap_size, block, block, cmp, user_data);
 
                         continue;
                     }
-                    rotate_merge_block(pta, swap, swap_size, block, pte - pta - block, cmp);
+                    rotate_merge_block(pta, swap, swap_size, block, pte - pta - block, cmp, user_data);
 
                     break;
                 }
@@ -1267,48 +1305,48 @@ namespace ncore
             {
                 VAR swap[nmemb];
 
-                tail_swap(pta, swap, nmemb, cmp);
+                tail_swap(pta, swap, nmemb, cmp, user_data);
             }
-            else if (quad_swap(pta, nmemb, cmp) == 0)
+            else if (quad_swap(pta, nmemb, cmp, user_data) == 0)
             {
-                VAR *swap = NULL;
+                VAR *swap = nullptr;
                 u32  block, swap_size = nmemb;
 
                 //		for (swap_size = 32 ; swap_size * 4 <= nmemb ; swap_size *= 4) {}
 
                 swap = (VAR *)malloc(swap_size * sizeof(VAR));
 
-                if (swap == NULL)
+                if (swap == nullptr)
                 {
                     VAR stack[512];
 
-                    tail_merge(pta, stack, 32, nmemb, 32, cmp);
-                    rotate_merge(pta, stack, 32, nmemb, 64, cmp);
+                    tail_merge(pta, stack, 32, nmemb, 32, cmp, user_data);
+                    rotate_merge(pta, stack, 32, nmemb, 64, cmp, user_data);
 
                     return;
                 }
-                block = quad_merge(pta, swap, swap_size, nmemb, 32, cmp);
-                rotate_merge(pta, swap, swap_size, nmemb, block, cmp);
+                block = quad_merge(pta, swap, swap_size, nmemb, 32, cmp, user_data);
+                rotate_merge(pta, swap, swap_size, nmemb, block, cmp, user_data);
 
                 free(swap);
             }
         }
 
         template <typename VAR>
-        void quadsort_swap(void *array, void *swap, u32 swap_size, u32 nmemb, sort_cmp_fn cmp, void *user_data)
+        void quadsort_swap(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta = (VAR *)array;
             VAR *pts = (VAR *)swap;
 
             if (nmemb <= 96)
             {
-                tail_swap(pta, pts, nmemb, cmp);
+                tail_swap(pta, pts, nmemb, cmp, user_data);
             }
-            else if (quad_swap(pta, nmemb, cmp) == 0)
+            else if (quad_swap(pta, nmemb, cmp, user_data) == 0)
             {
-                u32 block = quad_merge(pta, pts, swap_size, nmemb, 32, cmp);
+                u32 block = quad_merge(pta, pts, swap_size, nmemb, 32, cmp, user_data);
 
-                rotate_merge(pta, pts, swap_size, nmemb, block, cmp);
+                rotate_merge(pta, pts, swap_size, nmemb, block, cmp, user_data);
             }
         }
     }  // namespace quad_sort

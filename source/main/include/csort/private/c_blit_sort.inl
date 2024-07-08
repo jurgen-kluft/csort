@@ -9,22 +9,20 @@ namespace ncore
 {
     namespace blit_sort
     {
-        typedef s8 (*sort_cmp_fn)(void const *inItemA, void const *inItemB, void *inUserData);
-
-#define BLIT_AUX 512  // set to 0 for sqrt(n) cache size
-#define BLIT_OUT 96   // should be smaller or equal to BLIT_AUX
+#define BLIT_AUX   512  // set to 0 for sqrt(n) cache size
+#define BLIT_OUT   96   // should be smaller or equal to BLIT_AUX
 #define QUAD_CACHE 32
 
         template <typename VAR>
-        void blit_partition(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data);
+        void blit_partition(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, sort_cmp_fn cmp, void *user_data);
 
         template <typename VAR>
-        void blit_analyze(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data)
+        void blit_analyze(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             unsigned char loop, asum, bsum, csum, dsum;
             unsigned int  astreaks, bstreaks, cstreaks, dstreaks;
-            s32           quad1, quad2, quad3, quad4, half1, half2;
-            s32           cnt, abalance, bbalance, cbalance, dbalance;
+            u32           quad1, quad2, quad3, quad4, half1, half2;
+            u32           cnt, abalance, bbalance, cbalance, dbalance;
             VAR          *pta, *ptb, *ptc, *ptd;
 
             half1 = nmemb / 2;
@@ -46,13 +44,13 @@ namespace ncore
             {
                 for (asum = bsum = csum = dsum = 0, loop = 32; loop; loop--)
                 {
-                    asum += cmp(pta, pta + 1) > 0;
+                    asum += cmp(pta, pta + 1, user_data) > 0;
                     pta++;
-                    bsum += cmp(ptb, ptb + 1) > 0;
+                    bsum += cmp(ptb, ptb + 1, user_data) > 0;
                     ptb++;
-                    csum += cmp(ptc, ptc + 1) > 0;
+                    csum += cmp(ptc, ptc + 1, user_data) > 0;
                     ptc++;
-                    dsum += cmp(ptd, ptd + 1) > 0;
+                    dsum += cmp(ptd, ptd + 1, user_data) > 0;
                     ptd++;
                 }
                 abalance += asum;
@@ -80,29 +78,29 @@ namespace ncore
 
             for (; cnt > 7; cnt -= 4)
             {
-                abalance += cmp(pta, pta + 1) > 0;
+                abalance += cmp(pta, pta + 1, user_data) > 0;
                 pta++;
-                bbalance += cmp(ptb, ptb + 1) > 0;
+                bbalance += cmp(ptb, ptb + 1, user_data) > 0;
                 ptb++;
-                cbalance += cmp(ptc, ptc + 1) > 0;
+                cbalance += cmp(ptc, ptc + 1, user_data) > 0;
                 ptc++;
-                dbalance += cmp(ptd, ptd + 1) > 0;
+                dbalance += cmp(ptd, ptd + 1, user_data) > 0;
                 ptd++;
             }
 
             if (quad1 < quad2)
             {
-                bbalance += cmp(ptb, ptb + 1) > 0;
+                bbalance += cmp(ptb, ptb + 1, user_data) > 0;
                 ptb++;
             }
             if (quad1 < quad3)
             {
-                cbalance += cmp(ptc, ptc + 1) > 0;
+                cbalance += cmp(ptc, ptc + 1, user_data) > 0;
                 ptc++;
             }
             if (quad1 < quad4)
             {
-                dbalance += cmp(ptd, ptd + 1) > 0;
+                dbalance += cmp(ptd, ptd + 1, user_data) > 0;
                 ptd++;
             }
 
@@ -110,7 +108,7 @@ namespace ncore
 
             if (cnt == 0)
             {
-                if (cmp(pta, pta + 1) <= 0 && cmp(ptb, ptb + 1) <= 0 && cmp(ptc, ptc + 1) <= 0)
+                if (cmp(pta, pta + 1, user_data) <= 0 && cmp(ptb, ptb + 1, user_data) <= 0 && cmp(ptc, ptc + 1, user_data) <= 0)
                 {
                     return;
                 }
@@ -123,59 +121,59 @@ namespace ncore
 
             if (asum | bsum | csum | dsum)
             {
-                unsigned char span1 = (asum && bsum) * (cmp(pta, pta + 1) > 0);
-                unsigned char span2 = (bsum && csum) * (cmp(ptb, ptb + 1) > 0);
-                unsigned char span3 = (csum && dsum) * (cmp(ptc, ptc + 1) > 0);
+                unsigned char span1 = (asum && bsum) * (cmp(pta, pta + 1, user_data) > 0);
+                unsigned char span2 = (bsum && csum) * (cmp(ptb, ptb + 1, user_data) > 0);
+                unsigned char span3 = (csum && dsum) * (cmp(ptc, ptc + 1, user_data) > 0);
 
                 switch (span1 | span2 * 2 | span3 * 4)
                 {
                     case 0: break;
                     case 1:
-                        quad_reversal(array, ptb);
+                        quad_sort::quad_reversal(array, ptb);
                         abalance = bbalance = 0;
                         break;
                     case 2:
-                        quad_reversal(pta + 1, ptc);
+                        quad_sort::quad_reversal(pta + 1, ptc);
                         bbalance = cbalance = 0;
                         break;
                     case 3:
-                        quad_reversal(array, ptc);
+                        quad_sort::quad_reversal(array, ptc);
                         abalance = bbalance = cbalance = 0;
                         break;
                     case 4:
-                        quad_reversal(ptb + 1, ptd);
+                        quad_sort::quad_reversal(ptb + 1, ptd);
                         cbalance = dbalance = 0;
                         break;
                     case 5:
-                        quad_reversal(array, ptb);
-                        quad_reversal(ptb + 1, ptd);
+                        quad_sort::quad_reversal(array, ptb);
+                        quad_sort::quad_reversal(ptb + 1, ptd);
                         abalance = bbalance = cbalance = dbalance = 0;
                         break;
                     case 6:
-                        quad_reversal(pta + 1, ptd);
+                        quad_sort::quad_reversal(pta + 1, ptd);
                         bbalance = cbalance = dbalance = 0;
                         break;
-                    case 7: quad_reversal(array, ptd); return;
+                    case 7: quad_sort::quad_reversal(array, ptd); return;
                 }
 
                 if (asum && abalance)
                 {
-                    quad_reversal(array, pta);
+                    quad_sort::quad_reversal(array, pta);
                     abalance = 0;
                 }
                 if (bsum && bbalance)
                 {
-                    quad_reversal(pta + 1, ptb);
+                    quad_sort::quad_reversal(pta + 1, ptb);
                     bbalance = 0;
                 }
                 if (csum && cbalance)
                 {
-                    quad_reversal(ptb + 1, ptc);
+                    quad_sort::quad_reversal(ptb + 1, ptc);
                     cbalance = 0;
                 }
                 if (dsum && dbalance)
                 {
-                    quad_reversal(ptc + 1, ptd);
+                    quad_sort::quad_reversal(ptc + 1, ptd);
                     dbalance = 0;
                 }
             }
@@ -194,49 +192,49 @@ namespace ncore
 
             switch (asum + bsum * 2 + csum * 4 + dsum * 8)
             {
-                case 0: blit_partition(array, swap, swap_size, nmemb, cmp); return;
+                case 0: blit_partition(array, swap, swap_size, nmemb, cmp, user_data); return;
                 case 1:
                     if (abalance)
-                        quadsort_swap(array, swap, swap_size, quad1, cmp);
-                    blit_partition(pta + 1, swap, swap_size, quad2 + half2, cmp);
+                        quad_sort::quadsort_swap(array, swap, swap_size, quad1, cmp, user_data);
+                    blit_partition(pta + 1, swap, swap_size, quad2 + half2, cmp, user_data);
                     break;
                 case 2:
-                    blit_partition(array, swap, swap_size, quad1, cmp);
+                    blit_partition(array, swap, swap_size, quad1, cmp, user_data);
                     if (bbalance)
-                        quadsort_swap(pta + 1, swap, swap_size, quad2, cmp);
-                    blit_partition(ptb + 1, swap, swap_size, half2, cmp);
+                        quad_sort::quadsort_swap(pta + 1, swap, swap_size, quad2, cmp, user_data);
+                    blit_partition(ptb + 1, swap, swap_size, half2, cmp, user_data);
                     break;
                 case 3:
                     if (abalance)
-                        quadsort_swap(array, swap, swap_size, quad1, cmp);
+                        quad_sort::quadsort_swap(array, swap, swap_size, quad1, cmp, user_data);
                     if (bbalance)
-                        quadsort_swap(pta + 1, swap, swap_size, quad2, cmp);
-                    blit_partition(ptb + 1, swap, swap_size, half2, cmp);
+                        quad_sort::quadsort_swap(pta + 1, swap, swap_size, quad2, cmp, user_data);
+                    blit_partition(ptb + 1, swap, swap_size, half2, cmp, user_data);
                     break;
                 case 4:
-                    blit_partition(array, swap, swap_size, half1, cmp);
+                    blit_partition(array, swap, swap_size, half1, cmp, user_data);
                     if (cbalance)
-                        quadsort_swap(ptb + 1, swap, swap_size, quad3, cmp);
-                    blit_partition(ptc + 1, swap, swap_size, quad4, cmp);
+                        quad_sort::quadsort_swap(ptb + 1, swap, swap_size, quad3, cmp, user_data);
+                    blit_partition(ptc + 1, swap, swap_size, quad4, cmp, user_data);
                     break;
                 case 8:
-                    blit_partition(array, swap, swap_size, half1 + quad3, cmp);
+                    blit_partition(array, swap, swap_size, half1 + quad3, cmp, user_data);
                     if (dbalance)
-                        quadsort_swap(ptc + 1, swap, swap_size, quad4, cmp);
+                        quad_sort::quadsort_swap(ptc + 1, swap, swap_size, quad4, cmp, user_data);
                     break;
                 case 9:
                     if (abalance)
-                        quadsort_swap(array, swap, swap_size, quad1, cmp);
-                    blit_partition(pta + 1, swap, swap_size, quad2 + quad3, cmp);
+                        quad_sort::quadsort_swap(array, swap, swap_size, quad1, cmp, user_data);
+                    blit_partition(pta + 1, swap, swap_size, quad2 + quad3, cmp, user_data);
                     if (dbalance)
-                        quadsort_swap(ptc + 1, swap, swap_size, quad4, cmp);
+                        quad_sort::quadsort_swap(ptc + 1, swap, swap_size, quad4, cmp, user_data);
                     break;
                 case 12:
-                    blit_partition(array, swap, swap_size, half1, cmp);
+                    blit_partition(array, swap, swap_size, half1, cmp, user_data);
                     if (cbalance)
-                        quadsort_swap(ptb + 1, swap, swap_size, quad3, cmp);
+                        quad_sort::quadsort_swap(ptb + 1, swap, swap_size, quad3, cmp, user_data);
                     if (dbalance)
-                        quadsort_swap(ptc + 1, swap, swap_size, quad4, cmp);
+                        quad_sort::quadsort_swap(ptc + 1, swap, swap_size, quad4, cmp, user_data);
                     break;
                 case 5:
                 case 6:
@@ -249,73 +247,73 @@ namespace ncore
                     if (asum)
                     {
                         if (abalance)
-                            quadsort_swap(array, swap, swap_size, quad1, cmp);
+                            quad_sort::quadsort_swap(array, swap, swap_size, quad1, cmp, user_data);
                     }
                     else
-                        blit_partition(array, swap, swap_size, quad1, cmp);
+                        blit_partition(array, swap, swap_size, quad1, cmp, user_data);
                     if (bsum)
                     {
                         if (bbalance)
-                            quadsort_swap(pta + 1, swap, swap_size, quad2, cmp);
+                            quad_sort::quadsort_swap(pta + 1, swap, swap_size, quad2, cmp, user_data);
                     }
                     else
-                        blit_partition(pta + 1, swap, swap_size, quad2, cmp);
+                        blit_partition(pta + 1, swap, swap_size, quad2, cmp, user_data);
                     if (csum)
                     {
                         if (cbalance)
-                            quadsort_swap(ptb + 1, swap, swap_size, quad3, cmp);
+                            quad_sort::quadsort_swap(ptb + 1, swap, swap_size, quad3, cmp, user_data);
                     }
                     else
-                        blit_partition(ptb + 1, swap, swap_size, quad3, cmp);
+                        blit_partition(ptb + 1, swap, swap_size, quad3, cmp, user_data);
                     if (dsum)
                     {
                         if (dbalance)
-                            quadsort_swap(ptc + 1, swap, swap_size, quad4, cmp);
+                            quad_sort::quadsort_swap(ptc + 1, swap, swap_size, quad4, cmp, user_data);
                     }
                     else
-                        blit_partition(ptc + 1, swap, swap_size, quad4, cmp);
+                        blit_partition(ptc + 1, swap, swap_size, quad4, cmp, user_data);
                     break;
             }
 
-            if (cmp(pta, pta + 1) <= 0)
+            if (cmp(pta, pta + 1, user_data) <= 0)
             {
-                if (cmp(ptc, ptc + 1) <= 0)
+                if (cmp(ptc, ptc + 1, user_data) <= 0)
                 {
-                    if (cmp(ptb, ptb + 1) <= 0)
+                    if (cmp(ptb, ptb + 1, user_data) <= 0)
                     {
                         return;
                     }
                 }
                 else
                 {
-                    rotate_merge_block(array + half1, swap, swap_size, quad3, quad4, cmp);
+                    quad_sort::rotate_merge_block(array + half1, swap, swap_size, quad3, quad4, cmp, user_data);
                 }
             }
             else
             {
-                rotate_merge_block(array, swap, swap_size, quad1, quad2, cmp);
+                quad_sort::rotate_merge_block(array, swap, swap_size, quad1, quad2, cmp, user_data);
 
-                if (cmp(ptc, ptc + 1) > 0)
+                if (cmp(ptc, ptc + 1, user_data) > 0)
                 {
-                    rotate_merge_block(array + half1, swap, swap_size, quad3, quad4, cmp);
+                    quad_sort::rotate_merge_block(array + half1, swap, swap_size, quad3, quad4, cmp, user_data);
                 }
             }
-            rotate_merge_block(array, swap, swap_size, half1, half2, cmp);
+            quad_sort::rotate_merge_block(array, swap, swap_size, half1, half2, cmp, user_data);
         }
 
         // The next 4 functions are used for pivot selection
 
         template <typename VAR>
-        VAR blit_binary_median(VAR const *pta, VAR const *ptb, s32 len, sort_cmp_fn cmp, void *user_data)
+        VAR blit_binary_median(VAR const *pta, VAR const *ptb, u32 len, sort_cmp_fn cmp, void *user_data)
         {
             while (len /= 2)
             {
-                if (cmp(pta + len, ptb + len) <= 0)
+                if (cmp(pta + len, ptb + len, user_data) <= 0)
                     pta += len;
                 else
                     ptb += len;
             }
-            return cmp(pta, ptb) > 0 ? *pta : *ptb;
+            return cmp(pta, ptb, user_data) > 0 ? *pta : *ptb;
         }
 
         template <typename VAR>
@@ -324,29 +322,29 @@ namespace ncore
             VAR swap;
             s32 x;
 
-            x      = cmp(pta, pta + 1) > 0;
+            x      = cmp(pta, pta + 1, user_data) > 0;
             swap   = pta[!x];
             pta[0] = pta[x];
             pta[1] = swap;
             pta += 2;
-            x      = cmp(pta, pta + 1) > 0;
+            x      = cmp(pta, pta + 1, user_data) > 0;
             swap   = pta[!x];
             pta[0] = pta[x];
             pta[1] = swap;
             pta -= 2;
 
-            x      = (cmp(pta, pta + 2) <= 0) * 2;
+            x      = (cmp(pta, pta + 2, user_data) <= 0) * 2;
             pta[2] = pta[x];
             pta++;
-            x      = (cmp(pta, pta + 2) > 0) * 2;
+            x      = (cmp(pta, pta + 2, user_data) > 0) * 2;
             pta[0] = pta[x];
         }
 
         template <typename VAR>
-        VAR blit_median_of_nine(VAR const *array, VAR const *swap, s32 nmemb, sort_cmp_fn cmp, void *user_data)
+        VAR blit_median_of_nine(VAR const *array, VAR const *swap, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta;
-            s32  x, y, z;
+            u32  x, y, z;
 
             z = nmemb / 9;
 
@@ -359,28 +357,28 @@ namespace ncore
                 pta += z;
             }
 
-            blit_trim_four(swap, cmp);
-            blit_trim_four(swap + 4, cmp);
+            blit_trim_four(swap, cmp, user_data);
+            blit_trim_four(swap + 4, cmp, user_data);
 
             swap[0] = swap[5];
             swap[3] = swap[8];
 
-            blit_trim_four(swap, cmp);
+            blit_trim_four(swap, cmp, user_data);
 
             swap[0] = swap[6];
 
-            x = cmp(swap + 0, swap + 1) > 0;
-            y = cmp(swap + 0, swap + 2) > 0;
-            z = cmp(swap + 1, swap + 2) > 0;
+            x = cmp(swap + 0, swap + 1, user_data) > 0;
+            y = cmp(swap + 0, swap + 2, user_data) > 0;
+            z = cmp(swap + 1, swap + 2, user_data) > 0;
 
             return swap[(x == y) + (y ^ z)];
         }
 
         template <typename VAR>
-        VAR blit_median_of_cbrt(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, int *generic, sort_cmp_fn cmp, void *user_data)
+        VAR blit_median_of_cbrt(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, int *generic, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta, *ptb, *pts;
-            s32  cnt, div, cbrt;
+            u32  cnt, div, cbrt;
 
             for (cbrt = 32; nmemb > cbrt * cbrt * cbrt && cbrt < swap_size; cbrt *= 2) {}
 
@@ -400,8 +398,8 @@ namespace ncore
 
             for (cnt = cbrt / 8; cnt; cnt--)
             {
-                blit_trim_four(pta, cmp);
-                blit_trim_four(ptb, cmp);
+                blit_trim_four(pta, cmp, user_data);
+                blit_trim_four(ptb, cmp, user_data);
 
                 pta[0] = ptb[1];
                 pta[3] = ptb[2];
@@ -411,48 +409,48 @@ namespace ncore
             }
             cbrt /= 4;
 
-            quadsort_swap(pts, pts + cbrt * 2, cbrt, cbrt, cmp);
-            quadsort_swap(pts + cbrt, pts + cbrt * 2, cbrt, cbrt, cmp);
+            quad_sort::quadsort_swap(pts, pts + cbrt * 2, cbrt, cbrt, cmp, user_data);
+            quad_sort::quadsort_swap(pts + cbrt, pts + cbrt * 2, cbrt, cbrt, cmp, user_data);
 
             *generic = cmp(pts + cbrt * 2 - 1, pts) <= 0;
 
-            return blit_binary_median(pts, pts + cbrt, cbrt, cmp);
+            return blit_binary_median(pts, pts + cbrt, cbrt, cmp, user_data);
         }
 
         // As per suggestion by Marshall Lochbaum to improve generic data handling
 
         template <typename VAR>
-        s32 blit_reverse_partition(VAR *array, VAR *swap, VAR *piv, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data)
+        u32 blit_reverse_partition(VAR *array, VAR *swap, VAR *piv, u32 swap_size, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             if (nmemb > swap_size)
             {
-                s32 l, r, h = nmemb / 2;
+                u32 l, r, h = nmemb / 2;
 
-                l = blit_reverse_partition(array + 0, swap, piv, swap_size, h, cmp);
-                r = blit_reverse_partition(array + h, swap, piv, swap_size, nmemb - h, cmp);
+                l = blit_reverse_partition(array + 0, swap, piv, swap_size, h, cmp, user_data);
+                r = blit_reverse_partition(array + h, swap, piv, swap_size, nmemb - h, cmp, user_data);
 
                 trinity_rotation(array + l, swap, swap_size, h - l + r, h - l);
 
                 return l + r;
             }
-            s32  cnt, m;
+            u32  cnt, m;
             VAR *tmp, *ptx = array, *pta = array, *pts = swap;
 
             for (cnt = nmemb / 4; cnt; cnt--)
             {
-                tmp  = cmp(piv, ptx) > 0 ? pta++ : pts++;
+                tmp  = cmp(piv, ptx, user_data) > 0 ? pta++ : pts++;
                 *tmp = *ptx++;
-                tmp  = cmp(piv, ptx) > 0 ? pta++ : pts++;
+                tmp  = cmp(piv, ptx, user_data) > 0 ? pta++ : pts++;
                 *tmp = *ptx++;
-                tmp  = cmp(piv, ptx) > 0 ? pta++ : pts++;
+                tmp  = cmp(piv, ptx, user_data) > 0 ? pta++ : pts++;
                 *tmp = *ptx++;
-                tmp  = cmp(piv, ptx) > 0 ? pta++ : pts++;
+                tmp  = cmp(piv, ptx, user_data) > 0 ? pta++ : pts++;
                 *tmp = *ptx++;
             }
 
             for (cnt = nmemb % 4; cnt; cnt--)
             {
-                tmp  = cmp(piv, ptx) > 0 ? pta++ : pts++;
+                tmp  = cmp(piv, ptx, user_data) > 0 ? pta++ : pts++;
                 *tmp = *ptx++;
             }
             m = pta - array;
@@ -463,14 +461,14 @@ namespace ncore
         }
 
         template <typename VAR>
-        s32 blit_default_partition(VAR *array, VAR *swap, VAR *piv, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data)
+        s32 blit_default_partition(VAR *array, VAR *swap, VAR *piv, u32 swap_size, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             if (nmemb > swap_size)
             {
                 s32 l, r, h = nmemb / 2;
 
-                l = blit_default_partition(array + 0, swap, piv, swap_size, h, cmp);
-                r = blit_default_partition(array + h, swap, piv, swap_size, nmemb - h, cmp);
+                l = blit_default_partition(array + 0, swap, piv, swap_size, h, cmp, user_data);
+                r = blit_default_partition(array + h, swap, piv, swap_size, nmemb - h, cmp, user_data);
 
                 trinity_rotation(array + l, swap, swap_size, h - l + r, h - l);
 
@@ -482,19 +480,19 @@ namespace ncore
 
             for (cnt = nmemb / 4; cnt; cnt--)
             {
-                tmp  = cmp(ptx, piv) <= 0 ? pta++ : pts++;
+                tmp  = cmp(ptx, piv, user_data) <= 0 ? pta++ : pts++;
                 *tmp = *ptx++;
-                tmp  = cmp(ptx, piv) <= 0 ? pta++ : pts++;
+                tmp  = cmp(ptx, piv, user_data) <= 0 ? pta++ : pts++;
                 *tmp = *ptx++;
-                tmp  = cmp(ptx, piv) <= 0 ? pta++ : pts++;
+                tmp  = cmp(ptx, piv, user_data) <= 0 ? pta++ : pts++;
                 *tmp = *ptx++;
-                tmp  = cmp(ptx, piv) <= 0 ? pta++ : pts++;
+                tmp  = cmp(ptx, piv, user_data) <= 0 ? pta++ : pts++;
                 *tmp = *ptx++;
             }
 
             for (cnt = nmemb % 4; cnt; cnt--)
             {
-                tmp  = cmp(ptx, piv) <= 0 ? pta++ : pts++;
+                tmp  = cmp(ptx, piv, user_data) <= 0 ? pta++ : pts++;
                 *tmp = *ptx++;
             }
             m = pta - array;
@@ -515,27 +513,27 @@ namespace ncore
             {
                 if (nmemb <= 2048)
                 {
-                    piv = blit_median_of_nine(array, swap, nmemb, cmp);
+                    piv = blit_median_of_nine(array, swap, nmemb, cmp, user_data);
                 }
                 else
                 {
-                    piv = blit_median_of_cbrt(array, swap, swap_size, nmemb, &generic, cmp);
+                    piv = blit_median_of_cbrt(array, swap, swap_size, nmemb, &generic, cmp, user_data);
 
                     if (generic)
                     {
-                        quadsort_swap(array, swap, swap_size, nmemb, cmp);
+                        quad_sort::quadsort_swap(array, swap, swap_size, nmemb, cmp, user_data);
                         return;
                     }
                 }
 
                 if (a_size && cmp(&max, &piv) <= 0)
                 {
-                    a_size = blit_reverse_partition(array, swap, &piv, swap_size, nmemb, cmp);
+                    a_size = blit_reverse_partition(array, swap, &piv, swap_size, nmemb, cmp, user_data);
                     s_size = nmemb - a_size;
 
                     if (s_size <= a_size / 16 || a_size <= BLIT_OUT)
                     {
-                        quadsort_swap(array, swap, swap_size, a_size, cmp);
+                        quad_sort::quadsort_swap(array, swap, swap_size, a_size, cmp, user_data);
                         return;
                     }
                     nmemb  = a_size;
@@ -543,34 +541,34 @@ namespace ncore
                     continue;
                 }
 
-                a_size = blit_default_partition(array, swap, &piv, swap_size, nmemb, cmp);
+                a_size = blit_default_partition(array, swap, &piv, swap_size, nmemb, cmp, user_data);
                 s_size = nmemb - a_size;
 
                 if (a_size <= s_size / 16 || s_size <= BLIT_OUT)
                 {
                     if (s_size == 0)
                     {
-                        a_size = blit_reverse_partition(array, swap, &piv, swap_size, a_size, cmp);
+                        a_size = blit_reverse_partition(array, swap, &piv, swap_size, a_size, cmp, user_data);
                         s_size = nmemb - a_size;
 
                         if (s_size <= a_size / 16 || a_size <= BLIT_OUT)
                         {
-                            return quadsort_swap(array, swap, swap_size, a_size, cmp);
+                            return quad_sort::quadsort_swap(array, swap, swap_size, a_size, cmp, user_data);
                         }
                         nmemb  = a_size;
                         a_size = 0;
                         continue;
                     }
-                    quadsort_swap(array + a_size, swap, swap_size, s_size, cmp);
+                    quad_sort::quadsort_swap(array + a_size, swap, swap_size, s_size, cmp, user_data);
                 }
                 else
                 {
-                    blit_partition(array + a_size, swap, swap_size, s_size, cmp);
+                    blit_partition(array + a_size, swap, swap_size, s_size, cmp, user_data);
                 }
 
                 if (s_size <= a_size / 16 || a_size <= BLIT_OUT)
                 {
-                    quadsort_swap(array, swap, swap_size, a_size, cmp);
+                    quad_sort::quadsort_swap(array, swap, swap_size, a_size, cmp, user_data);
                     return;
                 }
                 nmemb = a_size;
@@ -583,7 +581,7 @@ namespace ncore
         {
             if (nmemb <= 132)
             {
-                quad_sort<VAR>(array, nmemb, cmp);
+                quad_sort::quadsort<VAR>(array, nmemb, cmp, user_data);
             }
             else
             {
@@ -600,7 +598,7 @@ namespace ncore
 #endif
                 VAR swap[swap_size];
 
-                blit_analyze(pta, swap, swap_size, nmemb, cmp);
+                blit_analyze(pta, swap, swap_size, nmemb, cmp, user_data);
             }
         }
 
@@ -609,14 +607,14 @@ namespace ncore
         {
             if (nmemb <= 132)
             {
-                quadsort_swap(array, swap, swap_size, nmemb, cmp);
+                quad_sort::quadsort_swap<VAR>(array, swap, swap_size, nmemb, cmp, user_data);
             }
             else
             {
                 VAR *pta = (VAR *)array;
                 VAR *pts = (VAR *)swap;
 
-                blit_analyze(pta, pts, swap_size, nmemb, cmp);
+                blit_analyze(pta, pts, swap_size, nmemb, cmp, user_data);
             }
         }
 
