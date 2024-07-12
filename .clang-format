@@ -102,7 +102,7 @@ IndentAccessModifiers: false
 IndentCaseLabels: true
 IndentCaseBlocks: false
 IndentGotoLabels: true
-IndentPPDirectives: AfterHash
+IndentPPDirectives: BeforeHash
 IndentExternBlock: AfterExternBlock
 IndentRequires: false
 IndentWidth: 4
@@ -323,7 +323,7 @@ IndentAccessModifiers: false
 IndentCaseLabels: true
 IndentCaseBlocks: false
 IndentGotoLabels: true
-IndentPPDirectives: AfterHash
+IndentPPDirectives: BeforeHash
 IndentExternBlock: AfterExternBlock
 IndentRequires: false
 IndentWidth: 4

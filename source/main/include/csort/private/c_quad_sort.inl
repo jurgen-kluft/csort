@@ -2,7 +2,7 @@
 #define __CSORT_QUAD_SORT_INL__
 #include "ccore/c_target.h"
 #ifdef USE_PRAGMA_ONCE
-#    pragma once
+    #pragma once
 #endif
 
 namespace ncore
@@ -11,42 +11,67 @@ namespace ncore
     {
         // quadsort 1.2.1.2 - Igor van den Hoven ivdhoven@gmail.com
 
-        void* malloc(u64 size);
-        void free(void* ptr);
+        void *malloc(u64 size);
+        void  free(void *ptr);
 
-        void memcpy(void* dest, const void* src, u64 n);
-        void memset(void* s, int c, u64 n);
-        void memmove(void* dest, const void* src, u64 n);
+        void memcpy(void *dest, const void *src, u64 n);
+        void memset(void *s, int c, u64 n);
+        void memmove(void *dest, const void *src, u64 n);
 
-        template <typename VAR>
-        void swap_branchless(VAR* pta, VAR swap, u32 x, u32 y, sort_cmp_fn cmp, void* user_data)
-        {
-            // TODO
-        }
+#define head_branchless_merge(ptd, x, ptl, ptr, cmp, user_data) \
+    x    = cmp(ptl, ptr, user_data) <= 0;                       \
+    *ptd = *ptl;                                                \
+    ptl += x;                                                   \
+    ptd[x] = *ptr;                                              \
+    ptr += !x;                                                  \
+    ptd++;
 
-        template <typename VAR>
-        void    parity_merge_two(VAR* array, VAR* swap, u32 x, u32 y, VAR*ptl, VAR*ptr, VAR*pts, sort_cmp_fn cmp, void* user_data)
-        {
+#define tail_branchless_merge(tpd, y, tpl, tpr, cmp, user_data) \
+    y    = cmp(tpl, tpr, user_data) <= 0;                       \
+    *tpd = *tpl;                                                \
+    tpl -= !y;                                                  \
+    tpd--;                                                      \
+    tpd[y] = *tpr;                                              \
+    tpr -= y;
 
-        }
+        // guarantee small parity merges are inlined with minimal overhead
 
-        template <typename VAR>
-        void    parity_merge_four(VAR*swap, VAR*array, u32 x, u32 y, VAR*ptl, VAR*ptr, VAR*pts, sort_cmp_fn cmp, void* user_data)
-        {
+#define parity_merge_two(array, swap, x, y, ptl, ptr, pts, cmp, user_data) \
+    ptl = array;                                                           \
+    ptr = array + 2;                                                       \
+    pts = swap;                                                            \
+    head_branchless_merge(pts, x, ptl, ptr, cmp, user_data);               \
+    *pts = cmp(ptl, ptr, user_data) <= 0 ? *ptl : *ptr;                    \
+                                                                           \
+    ptl = array + 1;                                                       \
+    ptr = array + 3;                                                       \
+    pts = swap + 3;                                                        \
+    tail_branchless_merge(pts, y, ptl, ptr, cmp, user_data);               \
+    *pts = cmp(ptl, ptr, user_data) > 0 ? *ptl : *ptr;
 
-        }
+#define parity_merge_four(array, swap, x, y, ptl, ptr, pts, cmp, user_data) \
+    ptl = array + 0;                                                        \
+    ptr = array + 4;                                                        \
+    pts = swap;                                                             \
+    head_branchless_merge(pts, x, ptl, ptr, cmp, user_data);                \
+    head_branchless_merge(pts, x, ptl, ptr, cmp, user_data);                \
+    head_branchless_merge(pts, x, ptl, ptr, cmp, user_data);                \
+    *pts = cmp(ptl, ptr, user_data) <= 0 ? *ptl : *ptr;                     \
+                                                                            \
+    ptl = array + 3;                                                        \
+    ptr = array + 7;                                                        \
+    pts = swap + 7;                                                         \
+    tail_branchless_merge(pts, y, ptl, ptr, cmp, user_data);                \
+    tail_branchless_merge(pts, y, ptl, ptr, cmp, user_data);                \
+    tail_branchless_merge(pts, y, ptl, ptr, cmp, user_data);                \
+    *pts = cmp(ptl, ptr, user_data) > 0 ? *ptl : *ptr;
 
-        template <typename VAR>
-        void head_branchless_merge(VAR*ptd, u32 x, VAR*ptl, VAR*ptr, sort_cmp_fn cmp, void* user_data)
-        {
-            
-        }
-
-        template <typename VAR>
-        void tail_branchless_merge(VAR*ptd, u32 x, VAR*ptl, VAR*ptr, sort_cmp_fn cmp, void* user_data)
-        {
-            
-        }
+#define swap_branchless(pta, swap, x, y, cmp, user_data) \
+    x      = cmp(pta, pta + 1, user_data) > 0;           \
+    y      = !x;                                         \
+    swap   = pta[y];                                     \
+    pta[0] = pta[x];                                     \
+    pta[1] = swap;
 
         template <typename VAR>
         void quad_reversal(VAR *pta, VAR *ptz);
