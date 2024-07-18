@@ -12,6 +12,14 @@ namespace ncore
 #define BLIT_AUX   512  // set to 0 for sqrt(n) cache size
 #define BLIT_OUT   96   // should be smaller or equal to BLIT_AUX
 #define QUAD_CACHE 32
+        template <typename VAR>
+        void memory_copy(VAR *dest, VAR const *src, u32 nmemb)
+        {
+            for (u32 i = 0; i < nmemb; i++)
+            {
+                dest[i] = src[i];
+            }
+        }
 
         template <typename VAR>
         void blit_partition(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, sort_cmp_fn cmp, void *user_data);
@@ -341,7 +349,7 @@ namespace ncore
         }
 
         template <typename VAR>
-        VAR blit_median_of_nine(VAR const *array, VAR const *swap, u32 nmemb, sort_cmp_fn cmp, void *user_data)
+        VAR blit_median_of_nine(VAR *array, VAR *swap, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta;
             u32  x, y, z;
@@ -412,7 +420,7 @@ namespace ncore
             quad_sort::quadsort_swap(pts, pts + cbrt * 2, cbrt, cbrt, cmp, user_data);
             quad_sort::quadsort_swap(pts + cbrt, pts + cbrt * 2, cbrt, cbrt, cmp, user_data);
 
-            *generic = cmp(pts + cbrt * 2 - 1, pts) <= 0;
+            *generic = cmp(pts + cbrt * 2 - 1, pts, user_data) <= 0;
 
             return blit_binary_median(pts, pts + cbrt, cbrt, cmp, user_data);
         }
@@ -429,7 +437,7 @@ namespace ncore
                 l = blit_reverse_partition(array + 0, swap, piv, swap_size, h, cmp, user_data);
                 r = blit_reverse_partition(array + h, swap, piv, swap_size, nmemb - h, cmp, user_data);
 
-                trinity_rotation(array + l, swap, swap_size, h - l + r, h - l);
+quad_sort::                trinity_rotation(array + l, swap, swap_size, h - l + r, h - l);
 
                 return l + r;
             }
@@ -455,7 +463,7 @@ namespace ncore
             }
             m = pta - array;
 
-            memcpy(array + m, swap, (nmemb - m) * sizeof(VAR));
+            memory_copy(array + m, swap, (nmemb - m) * sizeof(VAR));
 
             return m;
         }
@@ -470,7 +478,7 @@ namespace ncore
                 l = blit_default_partition(array + 0, swap, piv, swap_size, h, cmp, user_data);
                 r = blit_default_partition(array + h, swap, piv, swap_size, nmemb - h, cmp, user_data);
 
-                trinity_rotation(array + l, swap, swap_size, h - l + r, h - l);
+                quad_sort::trinity_rotation(array + l, swap, swap_size, h - l + r, h - l);
 
                 return l + r;
             }
@@ -497,13 +505,13 @@ namespace ncore
             }
             m = pta - array;
 
-            memcpy(array + m, swap, sizeof(VAR) * (nmemb - m));
+            memory_copy(array + m, swap, sizeof(VAR) * (nmemb - m));
 
             return m;
         }
 
         template <typename VAR>
-        void blit_partition(VAR *array, VAR *swap, s32 swap_size, s32 nmemb, sort_cmp_fn cmp, void *user_data)
+        void blit_partition(VAR *array, VAR *swap, u32 swap_size, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             s32 a_size = 0, s_size;
             VAR piv, max = 0;
@@ -526,7 +534,7 @@ namespace ncore
                     }
                 }
 
-                if (a_size && cmp(&max, &piv) <= 0)
+                if (a_size && cmp(&max, &piv, user_data) <= 0)
                 {
                     a_size = blit_reverse_partition(array, swap, &piv, swap_size, nmemb, cmp, user_data);
                     s_size = nmemb - a_size;

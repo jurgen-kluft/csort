@@ -22,7 +22,7 @@ func GetPackage() *denv.Package {
 	mainlib.Dependencies = append(mainlib.Dependencies, ccorepkg.GetMainLib())
 
 	// 'csort' unittest project
-	maintest := denv.SetupDefaultCppTestProject("ccore_test", "github.com\\jurgen-kluft\\csort")
+	maintest := denv.SetupDefaultCppTestProject("csort"+"_test", "github.com\\jurgen-kluft\\csort")
 	maintest.Dependencies = append(maintest.Dependencies, cunittestpkg.GetMainLib())
 	maintest.Dependencies = append(maintest.Dependencies, mainlib)
 
