@@ -14,7 +14,7 @@ namespace ncore
         //        void *malloc(u64 size);
         //        void  free(void *ptr);
 
-        void memory_copy(void *dest, const void *src, u64 numBytes)
+        inline void memory_copy(void *dest, const void *src, u64 numBytes)
         {
             u8       *d = (u8 *)dest;
             u8 const *s = (u8 const *)src;
@@ -24,7 +24,7 @@ namespace ncore
             }
         }
 
-        void memory_set(void *s, int c, u64 n)
+        inline void memory_set(void *s, int c, u64 n)
         {
             u8 *p = (u8 *)s;
             while (n--)
@@ -33,7 +33,7 @@ namespace ncore
             }
         }
 
-        void memory_move(void *dest, const void *src, u64 n)
+        inline void memory_move(void *dest, const void *src, u64 n)
         {
             u8       *d  = (u8 *)dest;
             u8       *de = d + n;
@@ -414,7 +414,7 @@ namespace ncore
         {
             VAR *ptb, *pty, tmp1, tmp2;
 
-            u32 loop = (ptz - pta) / 2;
+            u32 loop = (u32)(ptz - pta) / 2;
 
             ptb = pta + loop;
             pty = ptz - loop;
@@ -834,7 +834,7 @@ namespace ncore
                     pta += block;
                 } while (pta + block <= pte);
 
-                tail_merge(pta, swap, swap_size, pte - pta, block / 4, cmp, user_data);
+                tail_merge(pta, swap, swap_size, (u32)(pte - pta), block / 4, cmp, user_data);
 
                 block *= 4;
             }
@@ -1052,7 +1052,7 @@ namespace ncore
 
                         continue;
                     }
-                    partial_backward_merge(pta, swap, swap_size, pte - pta, block, cmp, user_data);
+                    partial_backward_merge(pta, swap, swap_size, (u32)(pte - pta), block, cmp, user_data);
 
                     break;
                 }
@@ -1120,7 +1120,7 @@ namespace ncore
                             *ptd   = temp;
                         }
 
-                        bridge = (ptd - ptc) / 2;
+                        bridge = (u32)(ptd - ptc) / 2;
 
                         while (bridge--)
                         {
@@ -1130,7 +1130,7 @@ namespace ncore
                             *pta++ = temp;
                         }
 
-                        bridge = (ptd - pta) / 2;
+                        bridge = (u32)(ptd - pta) / 2;
 
                         while (bridge--)
                         {
@@ -1188,7 +1188,7 @@ namespace ncore
                             *ptd   = temp;
                         }
 
-                        bridge = (ptb - pta) / 2;
+                        bridge = (u32)(ptb - pta) / 2;
 
                         while (bridge--)
                         {
@@ -1198,7 +1198,7 @@ namespace ncore
                             *ptd   = temp;
                         }
 
-                        bridge = (ptd - pta) / 2;
+                        bridge = (u32)(ptd - pta) / 2;
 
                         while (bridge--)
                         {
@@ -1248,7 +1248,7 @@ namespace ncore
             {
                 end--;
             }
-            return (end - array);
+            return (u32)(end - array);
         }
 
         template <typename VAR>
@@ -1344,7 +1344,7 @@ namespace ncore
 
                         continue;
                     }
-                    rotate_merge_block(pta, swap, swap_size, block, pte - pta - block, cmp, user_data);
+                    rotate_merge_block(pta, swap, swap_size, block, (u32)(pte - pta - block), cmp, user_data);
 
                     break;
                 }
@@ -1367,11 +1367,9 @@ namespace ncore
         void quadsort(void *array, u32 nmemb, sort_cmp_fn cmp, void *user_data)
         {
             VAR *pta = (VAR *)array;
-
             if (nmemb < 32)
             {
-                VAR swap[nmemb];
-
+                VAR swap[32];
                 tail_swap(pta, swap, nmemb, cmp, user_data);
             }
             else if (quad_swap(pta, nmemb, cmp, user_data) == 0)

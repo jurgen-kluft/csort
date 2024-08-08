@@ -461,7 +461,7 @@ quad_sort::                trinity_rotation(array + l, swap, swap_size, h - l + 
                 tmp  = cmp(piv, ptx, user_data) > 0 ? pta++ : pts++;
                 *tmp = *ptx++;
             }
-            m = pta - array;
+            m = (u32)(pta - array);
 
             memory_copy(array + m, swap, (nmemb - m) * sizeof(VAR));
 
@@ -503,7 +503,7 @@ quad_sort::                trinity_rotation(array + l, swap, swap_size, h - l + 
                 tmp  = cmp(ptx, piv, user_data) <= 0 ? pta++ : pts++;
                 *tmp = *ptx++;
             }
-            m = pta - array;
+            m = (u32)(pta - array);
 
             memory_copy(array + m, swap, sizeof(VAR) * (nmemb - m));
 
@@ -595,16 +595,16 @@ quad_sort::                trinity_rotation(array + l, swap, swap_size, h - l + 
             {
                 VAR *pta = (VAR *)array;
 #if BLIT_AUX
-                s32 swap_size = BLIT_AUX;
+                const s32 swap_size = BLIT_AUX;
+                VAR swap[swap_size];
 #else
                 s32 swap_size = 1 << 19;
-
                 while (nmemb / swap_size < swap_size / 128)
                 {
                     swap_size /= 4;
                 }
-#endif
                 VAR swap[swap_size];
+#endif
 
                 blit_analyze(pta, swap, swap_size, nmemb, cmp, user_data);
             }
