@@ -46,6 +46,22 @@ UNITTEST_SUITE_BEGIN(merge)
             CHECK_EQUAL(0, number_list[0]);
             CHECK_EQUAL(9, number_list[9]);
         }
+
+        UNITTEST_TEST(merge_f32)
+        {
+            f32 number_list[] = {0,1,2,4,5,7,8,9};
+            f32 other_list[] = {3,6};
+
+            g_merge_sorted_arrays(number_list, 8, other_list, 2, f32_compare, nullptr);
+
+            for (s32 i = 0; i < 9; ++i)
+                CHECK_TRUE(number_list[i] <= number_list[i + 1]);
+
+            CHECK_EQUAL(0, number_list[0]);
+            CHECK_EQUAL(9, number_list[9]);
+        }
+
+
     }
 }
 UNITTEST_SUITE_END
