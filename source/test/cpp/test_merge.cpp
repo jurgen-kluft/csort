@@ -60,8 +60,6 @@ UNITTEST_SUITE_BEGIN(merge)
             CHECK_EQUAL(0, number_list[0]);
             CHECK_EQUAL(9, number_list[9]);
         }
-
-
     }
 }
 UNITTEST_SUITE_END

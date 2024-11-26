@@ -9,9 +9,11 @@ namespace ncore
 {
     namespace blit_sort
     {
+
 #define BLIT_AUX   512  // set to 0 for sqrt(n) cache size
 #define BLIT_OUT   96   // should be smaller or equal to BLIT_AUX
 #define QUAD_CACHE 32
+
         template <typename VAR>
         void memory_copy(VAR *dest, VAR const *src, u32 nmemb)
         {
@@ -594,18 +596,8 @@ quad_sort::                trinity_rotation(array + l, swap, swap_size, h - l + 
             else
             {
                 VAR *pta = (VAR *)array;
-#if BLIT_AUX
                 const s32 swap_size = BLIT_AUX;
                 VAR swap[swap_size];
-#else
-                s32 swap_size = 1 << 19;
-                while (nmemb / swap_size < swap_size / 128)
-                {
-                    swap_size /= 4;
-                }
-                VAR swap[swap_size];
-#endif
-
                 blit_analyze(pta, swap, swap_size, nmemb, cmp, user_data);
             }
         }
@@ -628,6 +620,7 @@ quad_sort::                trinity_rotation(array + l, swap, swap_size, h - l + 
 
 #undef BLIT_AUX
 #undef BLIT_OUT
+#undef QUAD_CACHE
     }  // namespace blit_sort
 }  // namespace ncore
 

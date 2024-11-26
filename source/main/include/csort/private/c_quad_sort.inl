@@ -4,6 +4,7 @@
 #ifdef USE_PRAGMA_ONCE
     #pragma once
 #endif
+#include "ccore/c_memory.h"
 
 namespace ncore
 {
@@ -14,51 +15,6 @@ namespace ncore
         //        void *malloc(u64 size);
         //        void  free(void *ptr);
 
-        inline void memory_copy(void *dest, const void *src, u64 numBytes)
-        {
-            u8       *d = (u8 *)dest;
-            u8 const *s = (u8 const *)src;
-            while (numBytes--)
-            {
-                *d++ = *s++;
-            }
-        }
-
-        inline void memory_set(void *s, int c, u64 n)
-        {
-            u8 *p = (u8 *)s;
-            while (n--)
-            {
-                *p++ = (u8)c;
-            }
-        }
-
-        inline void memory_move(void *dest, const void *src, u64 n)
-        {
-            u8       *d  = (u8 *)dest;
-            u8       *de = d + n;
-            u8 const *s  = (u8 const *)src;
-            u8 const *se = s + n;
-            if ((d >= se) || (de <= s))
-            {
-                memory_copy(d, s, n);
-            }
-            else if (d < s)
-            {
-                while (s < se)
-                {
-                    *d++ = *s++;
-                }
-            }
-            else
-            {
-                s += n;
-                while (de > d)
-                {
-                    *--de = *--s;
-                }
-            }
-        }
 
 #define head_branchless_merge(ptd, x, ptl, ptr, cmp, user_data) \
     x    = cmp(ptl, ptr, user_data) <= 0;                       \
@@ -691,7 +647,7 @@ namespace ncore
             ptl8_ptr:
                 if (cmp(ptl + 7, ptr, user_data) <= 0)
                 {
-                    memory_copy(ptd, ptl, 8 * sizeof(VAR));
+                    nmem::memcpy(ptd, ptl, 8 * sizeof(VAR));
                     ptd += 8;
                     ptl += 8;
 
@@ -705,7 +661,7 @@ namespace ncore
             ptl_ptr8:
                 if (cmp(ptl, ptr + 7, user_data) > 0)
                 {
-                    memory_copy(ptd, ptr, 8 * sizeof(VAR));
+                    nmem::memcpy(ptd, ptr, 8 * sizeof(VAR));
                     ptd += 8;
                     ptr += 8;
 
@@ -721,7 +677,7 @@ namespace ncore
                 {
                     tpd -= 7;
                     tpr -= 7;
-                    memory_copy(tpd--, tpr--, 8 * sizeof(VAR));
+                    nmem::memcpy(tpd--, tpr--, 8 * sizeof(VAR));
 
                     if (tpr - ptr > 8)
                     {
@@ -735,7 +691,7 @@ namespace ncore
                 {
                     tpd -= 7;
                     tpl -= 7;
-                    memory_copy(tpd--, tpl--, 8 * sizeof(VAR));
+                    nmem::memcpy(tpd--, tpl--, 8 * sizeof(VAR));
 
                     if (tpl - ptl > 8)
                     {
@@ -799,17 +755,17 @@ namespace ncore
                     cross_merge(swap + block_x_2, pt2, block, block, cmp, user_data);
                     break;
                 case 1:
-                    memory_copy(swap, array, block_x_2 * sizeof(VAR));
+                    nmem::memcpy(swap, array, block_x_2 * sizeof(VAR));
                     cross_merge(swap + block_x_2, pt2, block, block, cmp, user_data);
                     break;
                 case 2:
                     cross_merge(swap, array, block, block, cmp, user_data);
-                    memory_copy(swap + block_x_2, pt2, block_x_2 * sizeof(VAR));
+                    nmem::memcpy(swap + block_x_2, pt2, block_x_2 * sizeof(VAR));
                     break;
                 case 3:
                     if (cmp(pt2 - 1, pt2, user_data) <= 0)
                         return;
-                    memory_copy(swap, array, block_x_2 * 2 * sizeof(VAR));
+                    nmem::memcpy(swap, array, block_x_2 * 2 * sizeof(VAR));
             }
             cross_merge(array, swap, block_x_2, block_x_2, cmp, user_data);
         }
@@ -863,7 +819,7 @@ namespace ncore
                 return;
             }
 
-            memory_copy(swap, array, block * sizeof(VAR));
+            nmem::memcpy(swap, array, block * sizeof(VAR));
 
             ptl = swap;
             tpl = swap + block - 1;
@@ -929,12 +885,12 @@ namespace ncore
             {
                 cross_merge(swap, array, block, right, cmp, user_data);
 
-                memory_copy(array, swap, nmemb * sizeof(VAR));
+                nmem::memcpy(array, swap, nmemb * sizeof(VAR));
 
                 return;
             }
 
-            memory_copy(swap, array + block, right * sizeof(VAR));
+            nmem::memcpy(swap, array + block, right * sizeof(VAR));
 
             tpr = swap + right - 1;
 
@@ -1077,9 +1033,9 @@ namespace ncore
             {
                 if (left <= swap_size)
                 {
-                    memory_copy(swap, array, left * sizeof(VAR));
-                    memory_move(array, array + left, right * sizeof(VAR));
-                    memory_copy(array + right, swap, left * sizeof(VAR));
+                    nmem::memcpy(swap, array, left * sizeof(VAR));
+                    nmem::memmove(array, array + left, right * sizeof(VAR));
+                    nmem::memcpy(array + right, swap, left * sizeof(VAR));
                 }
                 else
                 {
@@ -1095,14 +1051,14 @@ namespace ncore
                         ptc = pta + right;
                         ptd = ptc + left;
 
-                        memory_copy(swap, ptb, bridge * sizeof(VAR));
+                        nmem::memcpy(swap, ptb, bridge * sizeof(VAR));
 
                         while (left--)
                         {
                             *--ptc = *--ptd;
                             *ptd   = *--ptb;
                         }
-                        memory_copy(pta, swap, bridge * sizeof(VAR));
+                        nmem::memcpy(pta, swap, bridge * sizeof(VAR));
                     }
                     else
                     {
@@ -1145,9 +1101,9 @@ namespace ncore
             {
                 if (right <= swap_size)
                 {
-                    memory_copy(swap, array + left, right * sizeof(VAR));
-                    memory_move(array + right, array, left * sizeof(VAR));
-                    memory_copy(array, swap, right * sizeof(VAR));
+                    nmem::memcpy(swap, array + left, right * sizeof(VAR));
+                    nmem::memmove(array + right, array, left * sizeof(VAR));
+                    nmem::memcpy(array, swap, right * sizeof(VAR));
                 }
                 else
                 {
@@ -1163,14 +1119,14 @@ namespace ncore
                         ptc = pta + right;
                         ptd = ptc + left;
 
-                        memory_copy(swap, ptc, bridge * sizeof(VAR));
+                        nmem::memcpy(swap, ptc, bridge * sizeof(VAR));
 
                         while (right--)
                         {
                             *ptc++ = *pta;
                             *pta++ = *ptb++;
                         }
-                        memory_copy(ptd - bridge, swap, bridge * sizeof(VAR));
+                        nmem::memcpy(ptd - bridge, swap, bridge * sizeof(VAR));
                     }
                     else
                     {
@@ -1274,9 +1230,9 @@ namespace ncore
             {
                 if (lblock + left <= swap_size)
                 {
-                    memory_copy(swap, array, lblock * sizeof(VAR));
-                    memory_copy(swap + lblock, array + lblock + rblock, left * sizeof(VAR));
-                    memory_move(array + lblock + left, array + lblock, rblock * sizeof(VAR));
+                    nmem::memcpy(swap, array, lblock * sizeof(VAR));
+                    nmem::memcpy(swap + lblock, array + lblock + rblock, left * sizeof(VAR));
+                    nmem::memmove(array + lblock + left, array + lblock, rblock * sizeof(VAR));
 
                     cross_merge(array, swap, lblock, left, cmp, user_data);
                 }
