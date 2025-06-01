@@ -13,18 +13,18 @@ func GetPackage() *denv.Package {
 	ccorepkg := ccore.GetPackage()
 
 	// The main (csort) package
-	mainpkg := denv.NewPackage("csort")
+	mainpkg := denv.NewPackage("github.com\\jurgen-kluft", "csort")
 	mainpkg.AddPackage(cunittestpkg)
 	mainpkg.AddPackage(ccorepkg)
 
 	// 'csort' library
-	mainlib := denv.SetupCppLibProject("csort", "github.com\\jurgen-kluft\\csort")
+	mainlib := denv.SetupCppLibProject(mainpkg, "csort")
 	mainlib.AddDependencies(ccorepkg.GetMainLib()...)
 
 	// 'csort' unittest project
-	maintest := denv.SetupDefaultCppTestProject("csort"+"_test", "github.com\\jurgen-kluft\\csort")
+	maintest := denv.SetupCppTestProject(mainpkg, "csort"+"_test")
 	maintest.AddDependencies(cunittestpkg.GetMainLib()...)
-	maintest.Dependencies = append(maintest.Dependencies, mainlib)
+	maintest.AddDependency(mainlib)
 
 	mainpkg.AddMainLib(mainlib)
 	mainpkg.AddUnittest(maintest)
