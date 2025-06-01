@@ -6,27 +6,39 @@ import (
 	cunittest "github.com/jurgen-kluft/cunittest/package"
 )
 
-// GetPackage returns the package object of 'csort'
+const (
+	repo_path = "github.com\\jurgen-kluft"
+	repo_name = "csort"
+)
+
 func GetPackage() *denv.Package {
-	// Dependencies
+	name := repo_name
+
+	// dependencies
 	cunittestpkg := cunittest.GetPackage()
 	ccorepkg := ccore.GetPackage()
 
-	// The main (csort) package
-	mainpkg := denv.NewPackage("github.com\\jurgen-kluft", "csort")
+	// main package
+	mainpkg := denv.NewPackage(repo_path, repo_name)
 	mainpkg.AddPackage(cunittestpkg)
 	mainpkg.AddPackage(ccorepkg)
 
-	// 'csort' library
-	mainlib := denv.SetupCppLibProject(mainpkg, "csort")
+	// main library
+	mainlib := denv.SetupCppLibProject(mainpkg, name)
 	mainlib.AddDependencies(ccorepkg.GetMainLib()...)
 
-	// 'csort' unittest project
-	maintest := denv.SetupCppTestProject(mainpkg, "csort"+"_test")
+	// test library
+	testlib := denv.SetupCppTestLibProject(mainpkg, name)
+	testlib.AddDependencies(ccorepkg.GetTestLib()...)
+	testlib.AddDependencies(cunittestpkg.GetTestLib()...)
+
+	// unittest project
+	maintest := denv.SetupCppTestProject(mainpkg, name)
 	maintest.AddDependencies(cunittestpkg.GetMainLib()...)
-	maintest.AddDependency(mainlib)
+	maintest.AddDependency(testlib)
 
 	mainpkg.AddMainLib(mainlib)
+	mainpkg.AddTestLib(testlib)
 	mainpkg.AddUnittest(maintest)
 	return mainpkg
 }
